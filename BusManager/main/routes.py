@@ -3,4 +3,4 @@ main = Blueprint('main', __name__)
 
 @main.route("/")
 def main_home():
-	return "This is the main module  of BusManager"
+	return "This is the main module of BusManager"
