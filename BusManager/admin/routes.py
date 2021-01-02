@@ -8,6 +8,7 @@ As an Admin wants to know:
 • From which number the student sent the money.
 • Checking the driver info.
 • How many students are entered each bus with their IDs
+Basically All the GLobal Information! > FlaskWTF
 """
 
 @admin.route("/")

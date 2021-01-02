@@ -14,6 +14,8 @@ If the student have paid the driver can allow the student to enter the bus.
 
 When the driver allows the student, automatically sends the student ID to the Admin.
 The Admin will see each bus how many students are in with their ID
+
+> Student Can Give Rating Too
 """
 
 @driver.route("/")
@@ -22,6 +24,15 @@ def driver_home():
 
 @driver.route("/register", methods=['POST'])
 def driver_register():
+	"""
+	Name
+	Phone Number
+	Bus Number
+	Location
+	License Number
+	Experience (Years) > Verifyng
+	  > Check Student ID > Allow (or) Don't Allow
+	"""
 	return "This is the driver module of BusManager"
 
 @driver.route("/login")

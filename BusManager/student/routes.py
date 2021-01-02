@@ -20,6 +20,9 @@ So while we check if we receive the money or not the student will see a loading 
 After the Admin accepts now the student will be able to see available buses to the Area they have entered
 while they were registering. and we will provide them an ID "The ID is diff from student Id which university 
 gives the student".
+
+
+> Which Phone Did you send Money > Verify
 """
 
 @student.route("/")
@@ -29,6 +32,16 @@ def student_home():
 
 @student.route("/register", methods=['POST'])
 def register_number():
+	"""
+	Name
+	Phone Number
+	Student ID
+	Home Address
+	University Name
+	University Address
+
+	 > Get List of all Available Drivers to that Location
+	"""
 	return f"Registering Number"
 
 @student.route("/login")
