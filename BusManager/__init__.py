@@ -13,14 +13,12 @@ def create_app(config_class=Config):
 
 	#Import all your blueprints
 	from BusManager.main.routes import main
-	from BusManager.auth.routes import auth
 	from BusManager.driver.routes import driver
 	from BusManager.admin.routes import admin
 	from BusManager.student.routes import student
 	
 	#use the url_prefix arguement if you need prefixes for the routes in the blueprint
 	app.register_blueprint(main)
-	app.register_blueprint(auth, url_prefix='/auth')
 	app.register_blueprint(driver, url_prefix='/driver')
 	app.register_blueprint(admin, url_prefix='/admin')
 	app.register_blueprint(student, url_prefix='/student')

@@ -1,6 +1,3 @@
-from flask import Blueprint, jsonify, render_template, request
-student = Blueprint('student', __name__)
-
 """
 The student app has these features:
 
@@ -25,6 +22,11 @@ gives the student".
 > Which Phone Did you send Money > Verify
 """
 
+from flask import Blueprint, jsonify, render_template, request
+from BusManager.models import UniversityModel, StudentModel, DriverModel
+student = Blueprint('student', __name__)
+
+
 @student.route("/")
 def student_home():
 	return "This is the student module of BusManager"
@@ -46,12 +48,32 @@ def register_number():
 
 @student.route("/login")
 def login_number():
+	#!USING OTP
 	return f"Logging In Number"
 
-@student.route("/paymentstatus/<number>")
-def paymentstatus(number):
-	return f"Student Has Paid {number}"
+@student.route("/checkpaymentstatus/<phone_number>")
+def paymentstatus(phone_number):
+	phone_number = int(phone_number)
+	student = StudentModel.query.filter_by(phone=phone_number).first()
+	if(student):
+		print(f"Payment Status: ({student}) -> {student.is_paid} ")
+		return jsonify({
+			'status': 200,
+			'message':'OK',
+			'payment_status': student.is_paid
+		})
+	else:
+		return jsonify({'status': 0, 'message': 'Student Does not Exist'})
 
-@student.route("/getbuses/<number>")
-def getbuses(number):
-	return jsonify({})
+@student.route("/get_available_buses/<phone_number>")
+def getbuses(phone_number):
+	student = StudentModel.query.filter_by(phone=phone_number).first()
+	if(student):
+		s_loc = student.location
+		available_drivers = DriverModel.query.filter_by(location=s_loc).first()
+		return jsonify({
+				'status': 200,
+				'message':'OK',
+				'drivers': [driver.get_json_representation() for driver in available_drivers] if (available_drivers) else []
+			})
+	return jsonify({'status': 0, 'message': 'Student Does not Exist'})
