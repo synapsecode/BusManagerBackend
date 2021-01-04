@@ -1,0 +1,8 @@
+.title{
+	font-size: 65px;
+	font-weight: 100;
+}
+
+.is-invalid{
+	border: 1px solid crimson;
+}

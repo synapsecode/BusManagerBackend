@@ -1,0 +1,28 @@
+body{
+	background-color: rgb(4, 29, 15);
+	color: white;
+	padding: 10px;
+	font-family: 'Roboto', sans-serif;
+}
+
+.alert{
+	border: 1px solid black;
+	border-radius: 10px;
+	padding-left: 20px;
+	padding-top: 10px;
+	height: 40px;
+	width: 100%;
+	color: white;
+}
+
+.alert-info{
+	background-color: rgba(100, 148, 237, 0.438);
+}
+
+.alert-warning{
+	background-color: rgba(255, 255, 0, 0.61);
+}
+
+.alert-danger{
+	background-color: rgba(220, 20, 60, 0.616);
+}
