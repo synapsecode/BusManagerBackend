@@ -7,37 +7,37 @@
 	<h1 class="title">BusManager Admin v1</h1>
 	<small class="subtitle">Bus Management made simple <a class='lgo' href='{{ url_for('admin.logout') }}'>(Logout)</a></small>
 	<div class="opsec">
-		<a class="op" href="#">
+		<a class="op" href="{{url_for('admin.mark_payment_status')}}">
 			<center class='holder'>
 				<img src="https://img.icons8.com/color/48/000000/payment-history.png" class="opico"/>
 			</center>
 			<h5 class='opname'>Mark Payment Status</h5>
 		</a>
-		<a class="op" href="#">
+		<a class="op" href="{{url_for('admin.get_journey_info')}}">
 			<center class='holder'>
 				<img src="https://img.icons8.com/color/48/000000/route.png" class='opico'/>
 			</center>
 			<h5 class='opname'>Journey Information</h5>
 		</a>
-		<a class="op" href="#">
+		<a class="op" href="{{url_for('admin.verify_drivers')}}">
 			<center class='holder'>
 				<img src="https://img.icons8.com/color/48/000000/approval--v3.png" class='opico'/>
 			</center>
 			<h5 class='opname'>Verify<br>Drivers</h5>
 		</a>
-		<a class="op" href="#">
+		<a class="op" href="{{url_for('admin.verify_students')}}">
 			<center class='holder'>
 				<img src="https://img.icons8.com/color/48/000000/checked-radio-button--v1.png" class='opico'/>
 			</center>
 			<h5 class='opname'>Verify Students</h5>
 		</a>
-		<a class="op" href="#">
+		<a class="op" href="{{url_for('admin.suspend_driver')}}">
 			<center class='holder'>
 				<img src="https://img.icons8.com/color/48/000000/id-not-verified.png" class='opico'/>
 			</center>
 			<h5 class='opname'>Suspend Driver</h5>
 		</a>
-		<a class="op" href="#">
+		<a class="op" href="{{url_for('admin.suspend_student')}}">
 			<center class='holder'>
 				<img src="https://img.icons8.com/color/48/000000/id-not-verified.png" class='opico'/>
 			</center>

@@ -1,13 +1,12 @@
-from flask import render_template, request, Blueprint, jsonify
+from flask import render_template, request, Blueprint, jsonify, redirect, url_for
 from BusManager.models import LocationModel, UniversityModel
 from flask_login import login_required
 main = Blueprint('main', __name__)
 
 
 @main.route("/")
-@login_required
 def home():
-	return render_template('admin_home.html')
+	return redirect(url_for('admin.admin_home'))
 
 #Gets all the Lcoations on the Server for Suggestions
 @main.route('/getlocations')

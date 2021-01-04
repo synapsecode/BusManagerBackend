@@ -23,7 +23,15 @@ gives the student".
 """
 
 from flask import Blueprint, jsonify, render_template, request
-from BusManager.models import UniversityModel, StudentModel, DriverModel
+from BusManager.models import UniversityModel, StudentModel, DriverModel, LocationModel
+from BusManager import db
+import random
+
+def generate_student_id(l):
+	#!ID Expires after one month
+	cset = [*[str(i) for i in range(0,10)],*[chr(x) for x in range(65,91)], *[chr(x) for x in range(97,123)]]
+	sid = ''.join([random.choice(cset) for _ in range(l)])
+
 student = Blueprint('student', __name__)
 
 
@@ -34,36 +42,50 @@ def student_home():
 
 @student.route("/register", methods=['POST'])
 def register_number():
-	"""
-	Name
-	Phone Number
-	Student ID
-	Home Address
-	University Name
-	University Address
+	data = request.get_json()
+	name = data['name']
+	phone = data['phone_number']
+	location = data['location']
+	uni_name = data['university_name']
+	uni_addr = data['university_address']
+	home_addr = data['home_address']
 
-	 > Get List of all Available Drivers to that Location
-	"""
-	return f"Registering Number"
+	#Create location if doesnt exist
+	loc = LocationModel.query.filter_by(location_name=location).first()
+	if(loc == None):
+		loc = LocationModel(location_name=location)
+		db.session.add(loc)
+		db.session.commit()
+
+	#Create University if doesn't exist
+	uni = UniversityModel.query.filter_by(location_name=location).first()
+	if(uni == None):
+		uni = UniversityModel(name=uni_name, address=uni_addr)
+		db.session.add(loc)
+		db.session.commit()
+
+	sid = generate_student_id(6)
+	if(StudentModel.query.filter_by(student_id=sid).first()):
+		sid = sid[:2] + name[:2] + str(phone)[:2] #Custom Student ID if Clash Occurs
+
+	student = StudentModel(
+		name=name,
+		phone=phone,
+		student_id=sid,
+		home_address=home_addr,
+		uni=uni,
+		loc=loc,
+	)
+
+	db.session.add(student)
+	db.session.commit()
+
+	return jsonify({'status': 200, 'message': 'Created'})
 
 @student.route("/login")
 def login_number():
 	#!USING OTP
 	return f"Logging In Number"
-
-@student.route("/checkpaymentstatus/<phone_number>")
-def paymentstatus(phone_number):
-	phone_number = int(phone_number)
-	student = StudentModel.query.filter_by(phone=phone_number).first()
-	if(student):
-		print(f"Payment Status: ({student}) -> {student.is_paid} ")
-		return jsonify({
-			'status': 200,
-			'message':'OK',
-			'payment_status': student.is_paid
-		})
-	else:
-		return jsonify({'status': 0, 'message': 'Student Does not Exist'})
 
 @student.route("/get_available_buses/<phone_number>")
 def getbuses(phone_number):
