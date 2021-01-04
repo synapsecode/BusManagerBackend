@@ -59,6 +59,8 @@ class DriverModel(db.Model):
 	rating_count = db.Column(db.Integer)
 	profile_image = db.Column(db.String) #RawBytes or Hosted Location???
 	is_verified = db.Column(db.Boolean)
+
+	journeys = db.relationship('JourneyModel', backref='driver')
 	#affiliated_universities : Basically whichever university they can go to
 
 
@@ -108,6 +110,8 @@ class StudentModel(db.Model):
 	utc_last_paid = db.Column(db.Float) #UTCTime of Payment.
 	location = db.relationship('LocationModel', secondary=student_location_association, backref=db.backref('students', lazy='dynamic'))
 
+	journeys = db.relationship('JourneyModel', backref='student')
+
 
 	def __init__(self, name, phone, student_id, home_address, uni, loc):
 		self.name = name
@@ -127,3 +131,17 @@ class UniversityModel(db.Model):
 	name = db.Column(db.String)
 	address = db.Column(db.String)
 	#Other University Details
+
+
+class JourneyModel(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	driver_id = db.Column(db.Integer, db.ForeignKey('driver_model.id'))
+	student_id = db.Column(db.Integer, db.ForeignKey('student_model.id'))
+	timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+	def __init__(self, driver, student):
+		self.driver = driver
+		self.student = student
+
+	def __repr__(self):
+		return f"Journey({driver}->{student} @ GMT-{self.timestamp.day}={self.timestamp.month}-{self.timestamp.year})"

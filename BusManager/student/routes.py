@@ -25,6 +25,7 @@ gives the student".
 from flask import Blueprint, jsonify, render_template, request
 from BusManager.models import UniversityModel, StudentModel, DriverModel, LocationModel
 from BusManager import db
+from BusManager.main.utils import send_sms, verify_otp, send_otp
 import random
 
 def generate_student_id(l):
@@ -84,8 +85,13 @@ def register_number():
 
 @student.route("/login")
 def login_number():
-	#!USING OTP
-	return f"Logging In Number"
+	send_otp('+919611744348')
+	return f"Sent OTP"
+
+@student.route("/verifyotp/<otp>")
+def verifyotp(otp):
+	return "Correct" if verify_otp('+919611744348', otp) else "Incorrect"
+
 
 @student.route("/get_available_buses/<phone_number>")
 def getbuses(phone_number):
@@ -99,3 +105,8 @@ def getbuses(phone_number):
 				'drivers': [driver.get_json_representation() for driver in available_drivers] if (available_drivers) else []
 			})
 	return jsonify({'status': 0, 'message': 'Student Does not Exist'})
+
+
+
+#+12056352635
+#Twilio://ai.krustel:M@na$2003
