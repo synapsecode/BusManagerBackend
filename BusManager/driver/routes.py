@@ -1,6 +1,7 @@
 from flask import render_template, request, Blueprint, jsonify
 from BusManager.models import LocationModel, DriverModel, StudentModel
 from BusManager import db
+from BusManager.main.utils import verify_otp, send_otp
 driver = Blueprint('driver', __name__)
 
 """
@@ -59,9 +60,13 @@ def driver_register():
 	return "This is the driver module of BusManager"
 
 @driver.route("/login")
-def driver_login():
-	#!Login Using OTP Service
-	return "Login"
+def login_driver():
+	send_otp('+919611744348')
+	return f"Sent OTP"
+
+@driver.route("/verifyotp/<otp>")
+def verify_driver_otp(otp):
+	return "Correct" if verify_otp('+919611744348', otp) else "Incorrect"
 
 @driver.route("/allow_student", methods=['POST'])
 def allow_student():

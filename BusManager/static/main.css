@@ -5,7 +5,7 @@ body{
 	font-family: 'Roboto', sans-serif;
 }
 
-.alert{
+/* .alert{
 	border: 1px solid black;
 	border-radius: 10px;
 	padding-left: 20px;
@@ -25,4 +25,4 @@ body{
 
 .alert-danger{
 	background-color: rgba(220, 20, 60, 0.616);
-}
+} */

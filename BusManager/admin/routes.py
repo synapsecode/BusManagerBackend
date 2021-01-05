@@ -19,7 +19,7 @@ Basically All the GLobal Information! > FlaskWTF
 @admin.route("/")
 @login_required
 def admin_home():
-	return render_template('admin_home.html')
+	return render_template('admin_home.jinja')
 
 @admin.route("/login", methods=['GET', 'POST'])
 def adminlogin():

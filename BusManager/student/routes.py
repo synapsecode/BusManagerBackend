@@ -84,12 +84,12 @@ def register_number():
 	return jsonify({'status': 200, 'message': 'Created'})
 
 @student.route("/login")
-def login_number():
+def login_student():
 	send_otp('+919611744348')
 	return f"Sent OTP"
 
 @student.route("/verifyotp/<otp>")
-def verifyotp(otp):
+def verify_student_otp(otp):
 	return "Correct" if verify_otp('+919611744348', otp) else "Incorrect"
 
 

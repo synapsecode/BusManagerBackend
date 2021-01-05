@@ -8,3 +8,6 @@ class Config:
 	PRODUCTION_MODE = False #This states whether the app runs in DEBUG MODE or not
 	PORT_NUMBER = 8080
 	DEBUG=True
+	
+	TWILIO_ACCOUNT_SID = 'AC3fa45717b2f301de424eb588892047d7'
+	TWILIO_AUTH_TOKEN = 'f163cc27352e8bb99d01c8d02cbd43c7'
