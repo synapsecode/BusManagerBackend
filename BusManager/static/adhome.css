@@ -13,7 +13,7 @@
 
 .opsec{
 	padding: 20px 10px;
-	margin-top: 120px;
+	margin-top: 90px;
 	/* border: 1px solid red; */
 	display: flex;
 	
@@ -39,8 +39,13 @@
 	
 	.subtitle{
 		text-align: center;
-		margin-left: 50px;
+		margin-left: 35px;
 		font-size: 18px;
+	}
+
+	.logout{
+		text-align: center;
+		margin-left: 130px;
 	}
 } 
 

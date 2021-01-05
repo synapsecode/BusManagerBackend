@@ -1,11 +1,14 @@
-{% extends 'layout.jinja' %}
+{% extends 'layout.html' %}
 {% block styles %}
 	<link rel="stylesheet" href="{{url_for('static', filename='adhome.css')}}">
 {% endblock styles %}
 
 {% block content %}
+	
 	<h1 class="title">BusManager Admin v1</h1>
-	<small class="subtitle">Bus Management made simple <a class='lgo' href='{{ url_for('admin.logout') }}'>(Logout)</a></small>
+	<small class="subtitle">Bus Management made simple </small><br>
+	<small class="subtitle logout"><a class='lgo' href='{{ url_for('admin.logout') }}'>(Logout)</a></small>
+	
 	<div class="opsec">
 		<a class="op" href="{{url_for('admin.mark_payment_status')}}">
 			<center class='holder'>
