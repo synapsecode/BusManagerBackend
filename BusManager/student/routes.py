@@ -32,6 +32,7 @@ def generate_student_id(l):
 	#!ID Expires after one month
 	cset = [*[str(i) for i in range(0,10)],*[chr(x) for x in range(65,91)], *[chr(x) for x in range(97,123)]]
 	sid = ''.join([random.choice(cset) for _ in range(l)])
+	return sid
 
 student = Blueprint('student', __name__)
 
@@ -59,13 +60,14 @@ def register_number():
 		db.session.commit()
 
 	#Create University if doesn't exist
-	uni = UniversityModel.query.filter_by(location_name=location).first()
+	uni = UniversityModel.query.filter_by(name=uni_name).first()
 	if(uni == None):
 		uni = UniversityModel(name=uni_name, address=uni_addr)
 		db.session.add(loc)
 		db.session.commit()
 
 	sid = generate_student_id(6)
+	print(sid)
 	if(StudentModel.query.filter_by(student_id=sid).first()):
 		sid = sid[:2] + name[:2] + str(phone)[:2] #Custom Student ID if Clash Occurs
 
@@ -97,8 +99,9 @@ def verify_student_otp(otp):
 def getbuses(phone_number):
 	student = StudentModel.query.filter_by(phone=phone_number).first()
 	if(student):
-		s_loc = student.location
-		available_drivers = DriverModel.query.filter_by(location=s_loc).first()
+		s_loc = student.location[0]
+		print(s_loc)
+		available_drivers = s_loc.drivers.all()
 		return jsonify({
 				'status': 200,
 				'message':'OK',

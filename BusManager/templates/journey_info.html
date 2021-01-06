@@ -1,44 +1,27 @@
 {% extends 'bs_layout.html' %}
 {% block content %}
-<h1 class='display-1'>Journey Information</h1>
+<h1 class='display-2'>Today's Journey Information</h1>
 <br>
-<input type="text" id="searchbar" class="form-control" placeholder="Search Driver"><br>
+<input type="text" id="searchbar" class="form-control" placeholder="Search Driver Phone"><br>
 <table class="table table-striped table-dark" id="tbl">
   <thead>
     <tr>
       <th scope="col">Driver Name</th>
 	  <th scope="col">Bus Number</th>
-      <th scope="col">Date</th>
-	  <th scope="col">Time</th>
       <th scope="col">Phone</th>
 	  <th scope="col">Students</th>
     </tr>
   </thead>
   <tbody id='tbdy'>
-    <tr data-id="1">
-      <td>Noel Fargo</td>
-      <td>2345 7321 1198 6697</td>
-      <td>05/01/21</td>
-	  <td>12:35AM</td>
-	  <td class='phn'>+917738291111</td>
-	  <td>12</td>
-    </tr>
-    <tr data-id="2">
-        <td>Chris Rambo</td>
-      <td>2345 7321 1198 6697</td>
-      <td>05/01/21</td>
-	  <td>12:35AM</td>
-	   <td class='phn'>+917738291111</td>
-	   <td>12</td>
-    </tr>
-    <tr data-id="3">
-        <td>Abdul Bamblast</td>
-		<td>2345 7321 1198 6697</td>
-		<td>05/01/21</td>
-		<td>12:35AM</td>
-		 <td class='phn'>+1776443622</td>
-		 <td>12</td>
-    </tr>
+    {% for e in data %}
+       <tr data-id="{{e['driver'.id]}}">
+        <td>{{e['driver'].name}}</td>
+        <td>{{e['driver'].bus_number}}</td>
+        <td class='phn'>{{e['driver'].phone}}</td>
+        <td>{{e['students']}}</td>
+      </tr>
+    {% endfor %}
+
   </tbody>
 </table>
 {% endblock content %}
@@ -66,7 +49,7 @@ var input, filter, table, tr, td, i, txtValue;
 
   // Loop through all table rows, and hide those who don't match the search query
   for (i = 0; i < tr.length; i++) {
-    td = tr[i].getElementsByTagName("td")[4]; //Match Phone Number
+    td = tr[i].getElementsByTagName("td")[2]; //Match Phone Number
     if (td) {
       txtValue = td.textContent || td.innerText;
       if (txtValue.toLowerCase().indexOf(filter) > -1) {

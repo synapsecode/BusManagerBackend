@@ -107,7 +107,7 @@ class StudentModel(db.Model):
 	home_address = db.Column(db.String)
 	university = db.relationship('UniversityModel', secondary=university_association, backref=db.backref('students', lazy='dynamic'))
 	is_paid = db.Column(db.Boolean)
-	utc_last_paid = db.Column(db.Float) #UTCTime of Payment.
+	utc_last_paid = db.Column(db.DateTime) #UTCTime of Payment.
 	location = db.relationship('LocationModel', secondary=student_location_association, backref=db.backref('students', lazy='dynamic'))
 
 	journeys = db.relationship('JourneyModel', backref='student')
@@ -144,4 +144,53 @@ class JourneyModel(db.Model):
 		self.student = student
 
 	def __repr__(self):
-		return f"Journey({driver}->{student} @ GMT-{self.timestamp.day}={self.timestamp.month}-{self.timestamp.year})"
+		return f"Journey({self.driver}->{self.student} @ GMT-{self.timestamp.day}/{self.timestamp.month}/{self.timestamp.year})"
+
+
+
+
+"""
+Templates
+Driver
+	{
+		"name":"Noel Fargo",
+		"phone_number": "+911111908732",
+		"bus_number": "QWER TYUI OP12 3456",
+		"location":"Whitefield",
+		"license_number":"HGhfhs23nDg332kk",
+		"experience": "12"
+	}
+
+Student
+	{
+		"name":"Ruthu Singh",
+		"phone_number": "+912221334599",
+		"home_address": "#2223 Almagordo Koramangala",
+		"location":"Brigade Road",
+		"university_name":"Christ PU",
+		"university_address": "1333 2nd Cross"
+	}
+
+Add Rating
+	{
+		"license_number":"HGhfhs23nDg332kk",
+		"student_phone":"912239001221",
+		"rating":"1"
+	}
+
+Allow Student
+	{
+		"student_id":"ZsTIGw",
+		"license_number":"hhjshsfhfh774748"
+	}
+
+Edit Driver
+	{
+		"name":"Noel Fargo",
+		"phone_number": "+911111908754",
+		"bus_number": "QWER TYUI OP12 3457",
+		"location":"Kormangla",
+		"license_number":"HGhfhs23nDg332kk",
+		"experience": "12"
+	}
+"""

@@ -1,8 +1,9 @@
-from flask import render_template, request, Blueprint, redirect, url_for, flash
+from flask import render_template, request, Blueprint, redirect, url_for, flash, jsonify
 from BusManager.models import DriverModel, AdminUser, StudentModel
 from BusManager.admin.forms import AdminLoginForm
 from flask_login import login_user, current_user, logout_user, login_required
-from BusManager import bcrypt
+from BusManager import bcrypt, db
+import datetime
 
 admin = Blueprint('admin', __name__)
 
@@ -45,12 +46,33 @@ def logout():
 @admin.route('/mark_payment_status', methods=['GET', 'POST'])
 @login_required
 def mark_payment_status():
-	return render_template('markpaymentstatus.html', title='Mark Payment Status')
+	if(request.method == 'POST'):
+		data = request.form
+		id =int(data['id'])
+		student = StudentModel.query.filter_by(id=id).first()
+		if(not student): return jsonify({'status':0, 'message':'Invalid ID'})
+		student.is_paid = True
+		student.utc_last_paid = datetime.datetime.utcnow()
+		db.session.commit()
+		return redirect(url_for('admin.mark_payment_status'))
+
+	students = [s for s in StudentModel.query.all() if not s.is_paid]
+
+	return render_template('markpaymentstatus.html', title='Mark Payment Status', students=students)
 
 @admin.route('/get_journey_info', methods=['GET', 'POST'])
 @login_required
 def get_journey_info():
-	return render_template('journey_info.html', title='Journey Information')
+	data = []
+	drivers = DriverModel.query.all()
+	for driver in drivers:
+		jn = 0
+		for journey in driver.journeys:
+			if(journey.timestamp.day == datetime.datetime.utcnow().day):
+				jn += 1
+		data.append({'driver': driver, 'students': jn})
+	return render_template('journey_info.html', title='Journey Information', data=data)
+
 
 @admin.route('/verifydriver', methods=['GET', 'POST'])
 @login_required
