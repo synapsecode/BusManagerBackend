@@ -27,6 +27,7 @@ from BusManager.models import UniversityModel, StudentModel, DriverModel, Locati
 from BusManager import db
 from BusManager.main.utils import send_sms, verify_otp, send_otp
 import random
+import datetime
 
 def generate_student_id(l):
 	#!ID Expires after one month
@@ -110,6 +111,16 @@ def getbuses(phone_number):
 	return jsonify({'status': 0, 'message': 'Student Does not Exist'})
 
 
+@student.route('/checkpaymentstatus/<number>')
+def checkpaymentstatus(number):
+	student = StudentModel.query.filter_by(phone=number).first()
+	if(not student): return jsonify({'status':0, 'message':'No Student Found with that Phone Number'})
+	#Checking if Payment OverDue
+	if((datetime.datetime.utcnow() - student.utc_last_paid).days > 30):
+		student.is_paid = False
+		print(f"{student} is OverDue. Cancelling Subscription")
+		db.session.commit()
+	return jsonify({'status': 200, 'message':'OK', 'isPaid':student.is_paid})
 
 #+12056352635
 #Twilio://ai.krustel:M@na$2003

@@ -30,7 +30,7 @@ def driver_register():
 	data = request.get_json()
 	# print(data)
 	name = data['name']
-	phone = int(data['phone_number'])
+	phone = data['phone_number']
 	bus_number = data['bus_number']
 	location = data['location']
 	license_number = data['license_number']

@@ -1,4 +1,70 @@
 {% extends 'bs_layout.html' %}
 {% block content %}
-<h1>Suspend Drivers</h1>
+<h1 class='display-1'>Suspend Drivers</h1>
+<br>
+<input type="text" id="searchbar" class="form-control" placeholder="Search Driver Phone"><br>
+<table class="table table-striped table-dark" id="tbl">
+  <thead>
+    <tr>
+      <th scope="col">Driver Name</th>
+	  <th scope="col">Bus Number</th>
+      <th scope="col">Phone</th>
+	  <th scope="col">Suspend</th>
+    </tr>
+  </thead>
+  <tbody id='tbdy'>
+    {% for e in drivers %}
+       <tr data-id="{{e['driver'.id]}}">
+        <td>{{e.name}}</td>
+        <td>{{e.bus_number}}</td>
+        <td class='phn'>{{e.phone}}</td>
+        <td><button class="btn btn-danger" onclick=suspend({{e.id}})>Suspend</button></td>
+      </tr>
+    {% endfor %}
+
+  </tbody>
+</table>
 {% endblock content %}
+
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
+<script>
+//Filtering
+
+const suspend = (id) => {
+	console.log("Suspending Driver with id " + id )
+	fd = new FormData();
+	fd.append('id', id)
+	fetch(window.location.href, {
+		method: 'post',
+		body: fd
+	}).then(() => window.location.reload());
+}
+
+document.getElementById('searchbar').addEventListener('keyup', (_)=>{
+var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("searchbar");
+  filter = input.value.toLowerCase();
+  table = document.getElementById("tbl");
+  tr = table.getElementsByTagName("tr");
+
+  // Loop through all table rows, and hide those who don't match the search query
+  for (i = 0; i < tr.length; i++) {	
+    td = tr[i].getElementsByTagName("td")[2]; //Match Phone Number
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toLowerCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+  }
+})
+
+
+
+
+
+</script>
+{% endblock javascript %}

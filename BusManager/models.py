@@ -49,7 +49,7 @@ class LocationModel(db.Model):
 class DriverModel(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String)
-	phone = db.Column(db.Integer)
+	phone = db.Column(db.String)
 	bus_number = db.Column(db.String)
 	location = db.relationship('LocationModel', secondary=driver_location_association, backref=db.backref('drivers', lazy='dynamic'))
 	license_number  = db.Column(db.String)
@@ -59,6 +59,8 @@ class DriverModel(db.Model):
 	rating_count = db.Column(db.Integer)
 	profile_image = db.Column(db.String) #RawBytes or Hosted Location???
 	is_verified = db.Column(db.Boolean)
+
+	phone_verified = db.Column(db.Boolean)
 
 	journeys = db.relationship('JourneyModel', backref='driver')
 	#affiliated_universities : Basically whichever university they can go to
@@ -74,6 +76,7 @@ class DriverModel(db.Model):
 		self.total_ratings = 0
 		self.rating_count = 0
 		self.is_verified = False
+		self.phone_verified = False
 		self.profile_image = "https://www.ballaratosm.com.au/wp-content/uploads/2018/10/blank-profile.jpg" #Blank Hosted Image
 		loc.drivers.append(self)
 		#Add Driver to Location when creating Driver : loc.drivers.append(driver)
@@ -102,7 +105,7 @@ class DriverModel(db.Model):
 class StudentModel(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String)
-	phone = db.Column(db.Integer)
+	phone = db.Column(db.String)
 	student_id = db.Column(db.String)
 	home_address = db.Column(db.String)
 	university = db.relationship('UniversityModel', secondary=university_association, backref=db.backref('students', lazy='dynamic'))
@@ -112,6 +115,9 @@ class StudentModel(db.Model):
 
 	journeys = db.relationship('JourneyModel', backref='student')
 
+	created_on = db.Column(db.DateTime, default=datetime.utcnow)
+
+	phone_verified = db.Column(db.Boolean)
 
 	def __init__(self, name, phone, student_id, home_address, uni, loc):
 		self.name = name
@@ -121,6 +127,7 @@ class StudentModel(db.Model):
 		uni.students.append(self) #Check if uni exists or else make new one
 		loc.students.append(self) #Check if Loc exists or else make new one
 		self.is_paid = False
+		self.phone_verified = False
 
 	def __repr__(self):
 		return f"Student({self.name}, {self.phone})"

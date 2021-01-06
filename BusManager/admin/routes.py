@@ -56,7 +56,17 @@ def mark_payment_status():
 		db.session.commit()
 		return redirect(url_for('admin.mark_payment_status'))
 
-	students = [s for s in StudentModel.query.all() if not s.is_paid]
+	students = StudentModel.query.all()
+	
+	# Performing Bulk Operation to Cancell Subscription of People Who are OverDue (30+Days)
+	#This is redundant as we already check it everytime the service is used from Flutter
+	for s in students:
+		if((datetime.datetime.utcnow - s.utc_last_paid).days > 30):
+			s.is_paid = False
+			print(f"{s} is OverDue. Cancelling Subscription")
+			db.session.commit()
+
+	students = [s for s in students if not s.is_paid]
 
 	return render_template('markpaymentstatus.html', title='Mark Payment Status', students=students)
 
@@ -77,25 +87,45 @@ def get_journey_info():
 @admin.route('/verifydriver', methods=['GET', 'POST'])
 @login_required
 def verify_drivers():
+	if(request.method == 'POST'):
+		return redirect(url_for('admin.verify_drivers'))
+	drivers = [d for d in DriverModel.query.all() if not d.is_verified]
 	return render_template('verify_drivers.html', title='Verify Driver')
 
 
-@admin.route('/verifystudent', methods=['GET', 'POST'])
-@login_required
-def verify_students():
-	return render_template('verify_students.html', title='Verify Student')
+# @admin.route('/verifystudent', methods=['GET', 'POST'])
+# @login_required
+# def verify_students():
+# 	if(request.method == 'POST'):
+# 		return redirect(url_for('admin.verify_students'))
+# 	students = [s for s in StudentModel.query.all() if not s.is_verified]
+# 	return render_template('verify_students.html', title='Verify Student')
 
-@admin.route("/suspend_driver")
+@admin.route("/suspend_driver", methods=['GET', 'POST'])
 @login_required
 def suspend_driver():
+	if(request.method == 'POST'):
+		data = request.form
+		id = int(data['id'])
+		driver = DriverModel.query.filter_by(id=id).first()
+		if(not driver): return jsonify({'status':0, 'message':'Invalid ID'})
+		print(f"Suspending {driver}")
+		return redirect(url_for('admin.suspend_driver'))
 	drivers = DriverModel.query.all()
-	return render_template('suspend_drivers.html', title='Suspend Drivers')
+	return render_template('suspend_drivers.html', title='Suspend Drivers', drivers=drivers)
 
-@admin.route("/suspend_student")
+@admin.route("/suspend_student", methods=['GET', 'POST'])
 @login_required
 def suspend_student():
+	if(request.method == 'POST'):
+		data = request.form
+		id = int(data['id'])
+		student = StudentModel.query.filter_by(id=id).first()
+		if(not student): return jsonify({'status':0, 'message':'Invalid ID'})
+		print(f"Suspending {student}")
+		return redirect(url_for('admin.suspend_student'))
 	students = StudentModel.query.all()
-	return render_template('suspend_students.html', title='Suspend Students')
+	return render_template('suspend_students.html', title='Suspend Students', students=students)
 	
 
 """
