@@ -1,7 +1,8 @@
-from flask import render_template, request, Blueprint, jsonify
+from flask import render_template, request, Blueprint, jsonify, session
 from BusManager.models import LocationModel, DriverModel, StudentModel, JourneyModel
 from BusManager import db
-from BusManager.main.utils import verify_otp, send_otp
+from BusManager.main.utils import generate_session_id, send_otp, verify_otp
+import random
 driver = Blueprint('driver', __name__)
 
 """
@@ -53,21 +54,50 @@ def driver_register():
 	db.session.add(driver)
 	db.session.commit()
 
+	#Send the OTP Immediately after Registration
+	# send_otp(phone)
+	send_otp('+919611744348')
+
 	return jsonify({
 		'status': 200,
 		'message': 'Created Driver Account',
 	})
-	
-	return "This is the driver module of BusManager"
 
-@driver.route("/login")
-def login_driver():
+@driver.route("/resend_otp/<phone>")
+def resend_otp(phone):
+	#send_otp(phone)
 	send_otp('+919611744348')
-	return f"Sent OTP"
+	return jsonify({'status':200, 'message':'OK'})
 
-@driver.route("/verifyotp/<otp>")
-def verify_driver_otp(otp):
-	return "Correct" if verify_otp('+919611744348', otp) else "Incorrect"
+@driver.route("/verifyphone/<phone>/<otp>")
+def verify_driver_otp(phone, otp):
+	# sender_phone = phone
+	sender_phone = "+919611744348"
+	is_correct = verify_otp(sender_phone, otp)
+	if(is_correct):
+		driver = DriverModel.query.filter_by(phone=sender_phone).first()
+		if(not driver): return jsonify({'status':0, 'message':'No Driver with that Phone Number'})
+		driver.phone_verified = True
+		db.session.commit()
+		return jsonify({'status':200, 'message':'OK'})
+	return jsonify({'status':0, 'message':'Incorrect OTP'})
+
+@driver.route("/login/<phone>", methods=['GET', 'POST'])
+def login_driver(phone):
+	if(request.method == 'POST'):
+		data = request.get_json()
+		otp = data['otp']
+		is_correct = verify_otp(phone, otp)
+		if(is_correct):
+			sessionkey = generate_session_id()
+			session[f'DLOG{phone}'] =  sessionkey
+			return jsonify({'status':200, 'message':'OK', 'session_key':sessionkey})
+		return jsonify({'status':0, 'message':'Invalid OTP'})
+	#On Get request, send OTP to number
+	send_otp('+919611744348')
+	#send_otp(phone)
+	return jsonify({'status':200, 'message':'OK'})
+
 
 @driver.route("/allow_student", methods=['POST'])
 def allow_student():
@@ -85,14 +115,10 @@ def allow_student():
 	print(f"DriverLocation: {driver.location}    ---->   StudentLocation: {student.location}")
 	if(not student.location == driver.location):
 		return jsonify({'status':0, 'message': 'Locations do not match'})
-	#!Add Student to Journey
-	#Success
 	journey = JourneyModel(driver=driver, student=student)
 	db.session.add(journey)
 	db.session.commit()
 	return jsonify({'status':200, 'message':'OK'})
-
-
 
 @driver.route("/add_rating", methods=['POST'])
 def add_rating():
@@ -130,10 +156,16 @@ def edit_profile():
 			location = loc
 	
 	#!Handle Profile Image Updates
+	#! If Phone number changes, send OTP and Perform Reverification
 
 	#If such sensitive information changes, Driver must be reverified
 	if(data['phone_number'] != driver.phone or data['bus_number'] != driver.bus_number or data['license_number'] != driver.license_number):
 		driver.is_verified = False
+
+	if(data['phone_number'] != driver.phone):
+		#Number Changed -> Verify Number
+		send_otp(data['phone_number'])
+		#On app, show the Verify OTP Screen and send get request to /verifyphone
 
 	driver.name = name
 	driver.phone = phone

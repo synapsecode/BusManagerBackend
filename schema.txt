@@ -1,0 +1,58 @@
+BusManager API Schema
+We have 3 Primary Sections:
+	-> Admin (UI Based)
+	-> Driver API
+		Everything Relating to the Driver App
+	-> Student API
+		Everything Relating to the Student App
+
+Admin
+	baseroute: /admin
+
+	-> Mark Payment Status
+		Works based on the is_paid boolean property of each Student
+		Every 30 days, is_paid becomes false.
+		Then the student needs to pay the admin via their registered mobile number
+		Every Unpaid user is seen in this Mark Payment Status and once the admin recieves 
+		payment from a number, the admin can search the student using his number and Mark
+		them as paid. this sets their is_paid to true.
+
+	-> Journey Information
+		This gives a list of all Drivers and shows how many students are travelling in that 
+		particular driver's bus that day.
+
+	-> Verify Drivers
+		At Registration time, the phone number is verified via an OTP. 
+		But, Until the driver's license and bus number have been verified, their account is marked
+		as unverified. Once the admin is able to verify this information, the admin can search using
+		phone number and mark that driver as verified
+	
+	-> Delete Driver
+		Search by number and permanantly delete Driver
+
+	-> Delete Student
+		Search by number and permanantly delete student
+
+	-> Reallocate Student ID
+		Every 30 days student's is_paid is set to false.
+		Every 180days (6months) the student account gets lapsed. and appears in this section of the
+		admin panel.
+		After the admin confirms the 25$ downpayment after 6 months, then the admin can search via number
+		and press the reallocate button
+		This basically sets is_paid to true and gives the student a new student ID
+
+
+-> Driver API
+	baseroute: /driver
+
+	-> /driver/register
+		-> Register a new Driver
+		-> Accepts:
+			name: String
+			phone: String
+			bus_number: String
+			location: String (Region) -> Which Local Area do they work in. Example. JP Nagar, Jayanagar
+			license_number: String
+			experience: String (Years)
+
+		

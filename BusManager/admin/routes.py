@@ -159,11 +159,3 @@ def delete_students():
 		return redirect(url_for('admin.delete_students'))
 	students = StudentModel.query.all()
 	return render_template('delete_students.html', title='Delete Students', students=students)
-	
-
-"""
-!Implementation Pending
-Make something that can check each day how many days have passed
-and automatically set is_paid of student to false if they have'nt paid.
-if Payment Done, set last_paid_date
-"""

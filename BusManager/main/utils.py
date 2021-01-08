@@ -1,6 +1,23 @@
 from flask import session, current_app, config
 from BusManager.config import Config
+import random
 import time
+
+
+def generate_session_id():
+	cset = [*[str(i) for i in range(0,10)],*[chr(x) for x in range(65,91)], *[chr(x) for x in range(97,123)]]
+	session_id = ''.join([random.choice(cset) for _ in range(16)])
+	return session_id
+
+#For Authentication Purposes, After login, the user recieves back a session ID.
+#This function verifies the session ID.
+def verify_session_id(stype, phone, sess_id):
+	prefix = 'DLOG' if(stype == 'driver') else 'SLOG'
+	session_id = session.get(f'DLOG{phone}')
+	if(not session_id): return False
+	if(sess_id == session_id): return True
+	return False
+	
 
 def send_sms(msg, phone):
 	cfg = Config()
@@ -24,7 +41,7 @@ def send_otp(phone):
 
 #?Essentially We use OTP To verify number
 def verify_otp(phone, otp):
-	TIMEOUT = 60
+	TIMEOUT = 75
 	ct = int(time.time())
 	if(not session.get(phone)): return False
 	if(not session.get(f'T-{phone}')): return False
