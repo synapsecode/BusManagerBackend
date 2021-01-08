@@ -161,9 +161,9 @@ def checkpaymentstatus(number):
 @student.route("/edit_profile", methods=['POST'])
 def edit_profile():
 	data = request.get_json()
-	phone = data['phone_number'] #Identifier
-	student = StudentModel.query.filter_by(phone=phone).first()
-	if(not student):  return jsonify({'status':0, 'message':'No Student With that Phone Number'})
+	id = data['id'] #Identifier
+	student = StudentModel.query.filter_by(id=id).first()
+	if(not student):  return jsonify({'status':0, 'message':'No Student With that ID'})
 
 	name = data.get('name') or student.name
 	phone = data.get('phone_number') or student.phone

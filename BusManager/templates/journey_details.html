@@ -1,27 +1,28 @@
 {% extends 'bs_layout.html' %}
 {% block content %}
 <a class="btn btn-secondary" href="{{url_for('admin.admin_home')}}">Back to Homepage</a>
-<h1 class='display-1'>Delete Students</h1>
+<h1 class='display-2'>Driver's Journey Details</h1>
+<h2 class="text-muted">{{driver.name}} 
+(<span class="badge text-info">{{driver.bus_number}}</span>) 
+(<span class="badge text-warning">{{driver.phone}}</span>) • (<span class="badge text-primary">{{driver.location[0].location_name}}</span>)</h2>
 <br>
 <input type="text" id="searchbar" class="form-control" placeholder="Search Student Phone" onkeyup="tableFilterer(3)"><br>
 <table class="table table-striped table-dark" id="tbl">
   <thead>
     <tr>
-    <th scope="col">SerialNo</th>
+    <th scope="col">No.</th>
       <th scope="col">Student Name</th>
 	  <th scope="col">Student ID</th>
       <th scope="col">Phone</th>
-	  <th scope="col">Delete</th>
     </tr>
   </thead>
   <tbody id='tbdy'>
     {% for e in students %}
-       <tr data-id="{{e['driver'.id]}}">
-       <td>{{loop.index}}</td>
+      <tr>
+        <td>{{loop.index}}</td>
         <td>{{e.name}}</td>
         <td>{{e.student_id}}</td>
         <td class='phn'>{{e.phone}}</td>
-        <td><button class="btn btn-danger" onclick=Delete({{e.id}})>Delete</button></td>
       </tr>
     {% endfor %}
 
@@ -32,16 +33,6 @@
 {% block javascript %}
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
 <script>
-
-const Delete = (id) => {
-	console.log("Deleteing Student with id " + id )
-	fd = new FormData();
-	fd.append('id', id)
-	fetch(window.location.href, {
-		method: 'post',
-		body: fd
-	}).then(() => window.location.reload());
-}
 
 </script>
 {% endblock javascript %}

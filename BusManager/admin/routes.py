@@ -80,7 +80,7 @@ def mark_payment_status():
 
 	return render_template('markpaymentstatus.html', title='Mark Payment Status', students=students)
 
-@admin.route('/get_journey_info', methods=['GET', 'POST'])
+@admin.route('/get_journey_info')
 @login_required
 def get_journey_info():
 	data = []
@@ -92,6 +92,20 @@ def get_journey_info():
 				jn += 1
 		data.append({'driver': driver, 'students': jn})
 	return render_template('journey_info.html', title='Journey Information', data=data)
+
+@admin.route('/get_journey_details/<driver_id>')
+@login_required
+def get_journey_details(driver_id):
+	driver = DriverModel.query.filter_by(id=driver_id).first()
+	if(not driver): return jsonify({'status':0, 'message':'No Driver Found'})
+	students = []
+	for journey in driver.journeys:
+		if(journey.timestamp.day == datetime.datetime.utcnow().day):
+			students.append(journey.student)
+	return render_template('journey_details.html', title='Journey Details', students=students, driver=driver)
+
+
+
 
 
 @admin.route('/verifydriver', methods=['GET', 'POST'])

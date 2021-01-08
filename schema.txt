@@ -1,10 +1,12 @@
 BusManager API Schema
 We have 3 Primary Sections:
+
 	-> Admin (UI Based)
 	-> Driver API
 		Everything Relating to the Driver App
 	-> Student API
 		Everything Relating to the Student App
+	-> main -> Other Routes
 
 Admin
 	baseroute: /admin
@@ -45,7 +47,7 @@ Admin
 -> Driver API
 	baseroute: /driver
 
-	-> /driver/register
+	-> /register (POST)
 		-> Register a new Driver
 		-> Accepts:
 			name: String
@@ -54,5 +56,63 @@ Admin
 			location: String (Region) -> Which Local Area do they work in. Example. JP Nagar, Jayanagar
 			license_number: String
 			experience: String (Years)
+		-> Sends an OTP to provided Phone number
+		-> (On App) Must be immediately followed by /verifyphone
+		-> Returns:
+				Status: 200 (OK)
 
+	-> /resend_otp/phone => Resends OTP (GET)
+	-> /verifyphone/<phone>/<otp> (GET)
+		To be called right after Registration
+		Basically Checks if the provided number is valid
+
+		-> Returns:
+				Status: 200 (OK)
+						0 (Invalid Driver, OTP Incorrect)
+
+	-> /login/<phone> (GET, POST)
+		GET:
+			Sends an OTP To phone
 		
+		POST:
+			recieves OTP Via otp key in post data
+			verifies it, if correct sends a session key that must be used
+			for all protected calls to access the API
+
+		-> Returns 
+			Status: 200(OK, SK), 0(Incorrect OTP, No Student)
+	
+	-> /allow_student (POST)
+		-> Accepts:
+			student_id, license_number
+		Basically, If student has paid and has the same location (Region) as the driver, then a match is 
+		made and the student is allowed into the bus
+		student is added to that day's journey under the driver
+
+		-> Returns:
+			Status: 200(OK), 0(Invalid Student/Driver, Not Paid, Location Doesnt Match)
+
+	-> /add_rating (POST)
+		-> Accepts:
+			license_number, student_phone, rating
+		Used to Rate the Driver
+		-> Returns 
+			Status: 200(OK), 0(Invalid Student/Driver)
+
+	-> /edit_profile
+		-> Accepts:
+			<same as register> + Database ID (Identifier)
+		Edits the drivers data
+		IF phone, license or bus_number have been changed then Driver needs to be
+		re_verified by the Admin.
+		If phone number changed, an OTP is sent 
+		App will have to show and send to /verifyphone for the driver again
+
+		-> Returns:
+			Status: 200(OK), 0(Invalid ID)
+
+-> Main API
+	-> /getlocations => Gets all Locations(Regions) on the Platform -> Used for AutoFill or Suggestions
+	-> /getuniversities => Gets all Universities on the Platform
+		
+-> Student API

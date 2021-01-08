@@ -1,6 +1,6 @@
 {% extends 'bs_layout.html' %}
 {% block content %}
-<a class="btn btn-secondary" href="{{url_for('admin.admin_home')}}">Back</a>
+<a class="btn btn-secondary" href="{{url_for('admin.admin_home')}}">Back to Homepage</a>
 <h1 class='display-2'>Today's Journey Information</h1>
 <br>
 <input type="text" id="searchbar" class="form-control" placeholder="Search Driver Phone" onkeyup="tableFilterer(4)"><br>
@@ -17,6 +17,7 @@
   </thead>
   <tbody id='tbdy'>
     {% for e in data %}
+      <tr onclick="getDetails({{e['driver'].id}})">
         <td>{{loop.index}}</td>
         <td>{{e['driver'].name}}</td>
         <td>{{e['driver'].bus_number}}</td>
@@ -33,6 +34,8 @@
 {% block javascript %}
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
 <script>
-
+const getDetails = (id) => {
+  window.location.href = `${window.location.origin}/admin/get_journey_details/${id}`
+}
 </script>
 {% endblock javascript %}

@@ -82,6 +82,7 @@ def verify_driver_otp(phone, otp):
 		return jsonify({'status':200, 'message':'OK'})
 	return jsonify({'status':0, 'message':'Incorrect OTP'})
 
+
 @driver.route("/login/<phone>", methods=['GET', 'POST'])
 def login_driver(phone):
 	if(request.method == 'POST'):
@@ -136,14 +137,15 @@ def add_rating():
 @driver.route("/edit_profile", methods=['POST'])
 def edit_profile():
 	data = request.get_json()
-	license_number = data['license_number'] #Identifier
-	driver = DriverModel.query.filter_by(license_number=license_number).first()
-	if(not driver):  return jsonify({'status':0, 'message':'Invalid License Number'})
+	id = data['id'] #Identifier
+	driver = DriverModel.query.filter_by(id=id).first()
+	if(not driver):  return jsonify({'status':0, 'message':'Invalid ID'})
 
-	name = data['name'] if data['name'] else driver.name
-	phone = data['phone_number'] if data['phone_number'] else driver.phone
-	bus_number = data['bus_number'] if data['bus_number'] else driver.bus_number
-	experience = data['experience'] if data['experience'] else driver.experience
+	name = data['name'] or driver.name
+	phone = data['phone_number'] or driver.phone
+	bus_number = data['bus_number'] or driver.bus_number
+	experience = data['experience'] or driver.experience
+	license_number = data['license_number'] or driver.license_number
 	location = driver.location[0]
 	location.drivers.remove(driver) #Remove Existing Location
 	if(data['location']): 
@@ -171,7 +173,7 @@ def edit_profile():
 	driver.phone = phone
 	driver.bus_number = bus_number
 	driver.experience = experience
-	driver.license_number = data['license_number']
+	driver.license_number = license_number
 	location.drivers.append(driver) #Add Driver to New Location
 	db.session.commit()
 	return jsonify({'status':200, 'message':'Updated Data'})
