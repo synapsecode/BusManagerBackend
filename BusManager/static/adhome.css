@@ -75,9 +75,9 @@
 }
 
 .opico{
-	height: 80px;
-	width: 80px;
-	margin-top: 35px;
+	height: 70px;
+	width: 70px;
+	margin-top: 40px;
 }
 
 .opname{
@@ -90,4 +90,14 @@
 .lgo{
 	color: crimson;
 	text-decoration: none;
+}
+
+.badge{
+	background-color: crimson;
+	padding: 4px 8px;
+	border: 1px solid lightcoral;
+	border-radius: 5px;
+	position: absolute;
+	margin-top: 0px;
+	margin-left: 90px;
 }

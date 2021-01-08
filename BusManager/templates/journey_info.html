@@ -1,22 +1,26 @@
 {% extends 'bs_layout.html' %}
 {% block content %}
+<a class="btn btn-secondary" href="{{url_for('admin.admin_home')}}">Back</a>
 <h1 class='display-2'>Today's Journey Information</h1>
 <br>
-<input type="text" id="searchbar" class="form-control" placeholder="Search Driver Phone"><br>
+<input type="text" id="searchbar" class="form-control" placeholder="Search Driver Phone" onkeyup="tableFilterer(4)"><br>
 <table class="table table-striped table-dark" id="tbl">
   <thead>
     <tr>
+    <th scope="col">No.</th>
       <th scope="col">Driver Name</th>
 	  <th scope="col">Bus Number</th>
+     <th scope="col">Destination Region</th>
       <th scope="col">Phone</th>
 	  <th scope="col">Students</th>
     </tr>
   </thead>
   <tbody id='tbdy'>
     {% for e in data %}
-       <tr data-id="{{e['driver'.id]}}">
+        <td>{{loop.index}}</td>
         <td>{{e['driver'].name}}</td>
         <td>{{e['driver'].bus_number}}</td>
+        <td>{{e['driver'].location[0].location_name}}</td>
         <td class='phn'>{{e['driver'].phone}}</td>
         <td>{{e['students']}}</td>
       </tr>
@@ -29,41 +33,6 @@
 {% block javascript %}
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
 <script>
-/*let tri = [...document.getElementsByTagName('TR')]
-tri.forEach((e)=>{
-	e.addEventListener('click', (_)=>{
-		let driver_id = e.dataset.id
-		if(driver_id === undefined) return;
-		console.log(`Clicked On ${driver_id}`)
-	});
-})*/
-
-//Filtering
-
-document.getElementById('searchbar').addEventListener('keyup', (_)=>{
-var input, filter, table, tr, td, i, txtValue;
-  input = document.getElementById("searchbar");
-  filter = input.value.toLowerCase();
-  table = document.getElementById("tbl");
-  tr = table.getElementsByTagName("tr");
-
-  // Loop through all table rows, and hide those who don't match the search query
-  for (i = 0; i < tr.length; i++) {
-    td = tr[i].getElementsByTagName("td")[2]; //Match Phone Number
-    if (td) {
-      txtValue = td.textContent || td.innerText;
-      if (txtValue.toLowerCase().indexOf(filter) > -1) {
-        tr[i].style.display = "";
-      } else {
-        tr[i].style.display = "none";
-      }
-    }
-  }
-})
-
-
-
-
 
 </script>
 {% endblock javascript %}

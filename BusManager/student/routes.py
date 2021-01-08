@@ -23,14 +23,13 @@ gives the student".
 """
 
 from flask import Blueprint, jsonify, render_template, request
-from BusManager.models import UniversityModel, StudentModel, DriverModel, LocationModel
+from BusManager.models import *
 from BusManager import db
 from BusManager.main.utils import send_sms, verify_otp, send_otp
 import random
 import datetime
 
 def generate_student_id(l):
-	#!ID Expires after one month
 	cset = [*[str(i) for i in range(0,10)],*[chr(x) for x in range(65,91)], *[chr(x) for x in range(97,123)]]
 	sid = ''.join([random.choice(cset) for _ in range(l)])
 	return sid
@@ -115,12 +114,21 @@ def getbuses(phone_number):
 def checkpaymentstatus(number):
 	student = StudentModel.query.filter_by(phone=number).first()
 	if(not student): return jsonify({'status':0, 'message':'No Student Found with that Phone Number'})
+	
+	if(not student.is_paid): return jsonify({'status': 200, 'message':'OK', 'isPaid':False})
+
+	#Check if 6 months lapsed
+	if(student.is_lapsed):
+		return jsonify({'status': 0, 'message':'6 Months Completed. Please StudentID Must be renewed', 'isPaid':False})
+
 	#Checking if Payment OverDue
 	if((datetime.datetime.utcnow() - student.utc_last_paid).days > 30):
 		student.is_paid = False
-		print(f"{student} is OverDue. Cancelling Subscription")
 		db.session.commit()
-	return jsonify({'status': 200, 'message':'OK', 'isPaid':student.is_paid})
+		return jsonify({'status': 0, 'message':'30 Days Elapsed. Please Pay to restore services', 'isPaid':False})
+	
+
+	return jsonify({'status': 200, 'message':'OK', 'isPaid':True})
 
 #+12056352635
 #Twilio://ai.krustel:M@na$2003

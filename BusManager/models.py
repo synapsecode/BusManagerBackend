@@ -119,6 +119,8 @@ class StudentModel(db.Model):
 
 	phone_verified = db.Column(db.Boolean)
 
+	#is_lapsed <- Has 6 month period passed?
+
 	def __init__(self, name, phone, student_id, home_address, uni, loc):
 		self.name = name
 		self.phone = phone
@@ -128,6 +130,19 @@ class StudentModel(db.Model):
 		loc.students.append(self) #Check if Loc exists or else make new one
 		self.is_paid = False
 		self.phone_verified = False
+		#self.is_lapsed = True
+
+	#Returns true of 6 months (180days have passed since created_on)
+	#created_on gets updated everytime student ID is reallocated via admin.
+	@property
+	def is_lapsed(self):
+		if((datetime.utcnow() - self.created_on).days > 180):
+			self.is_paid = False
+			if(not LapsedStudents.query.filter_by(sid=self.id).first()):
+				db.session.add(LapsedStudents(self))
+			db.session.commit()
+			return True
+		return False
 
 	def __repr__(self):
 		return f"Student({self.name}, {self.phone})"
@@ -154,6 +169,20 @@ class JourneyModel(db.Model):
 		return f"Journey({self.driver}->{self.student} @ GMT-{self.timestamp.day}/{self.timestamp.month}/{self.timestamp.year})"
 
 
+class LapsedStudents(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	sid = db.Column(db.Integer)
+
+	def __init__(self, student):
+		self.sid = student.id
+
+	@property
+	def get_student(self):
+		student = StudentModel.query.filter_by(id=self.sid).first()
+		return student
+
+	def __repr__(self):
+		return self.get_student
 
 
 """

@@ -1,27 +1,27 @@
 {% extends 'bs_layout.html' %}
 {% block content %}
 <a class="btn btn-secondary" href="{{url_for('admin.admin_home')}}">Back</a>
-<h1 class='display-2'>Mark Payment Status</h1>
+<h1 class='display-1'>Reallocate Student ID</h1>
 <br>
-<input type="text" id="searchbar" class="form-control" placeholder="Search Driver Phone"  onkeyup="tableFilterer(3)"><br>
+<input type="text" id="searchbar" class="form-control" placeholder="Search Student Phone" onkeyup="tableFilterer(3)"><br>
 <table class="table table-striped table-dark" id="tbl">
   <thead>
     <tr>
-	  <th scope="col">No.</th>
+    <th scope="col">SerialNo</th>
       <th scope="col">Student Name</th>
 	  <th scope="col">Student ID</th>
       <th scope="col">Phone</th>
-	  <th scope="col">Mark Paid</th>
+	  <th scope="col">Reallocate</th>
     </tr>
   </thead>
   <tbody id='tbdy'>
-    {% for e in students %}
-       <tr data-id="{{e.id}}">
-	     <td>{{loop.index}}</td>
+    {% for e in lapsed_students %}
+       <tr data-id="{{e['driver'.id]}}">
+       <td>{{loop.index}}</td>
         <td>{{e.name}}</td>
         <td>{{e.student_id}}</td>
         <td class='phn'>{{e.phone}}</td>
-		<td><button class="btn btn-success" onclick=markPaid({{e.id}})>Mark Paid</button></td>
+        <td><button class="btn btn-primary" onclick=Reallocate({{e.id}})>Reallocate</button></td>
       </tr>
     {% endfor %}
 
@@ -33,8 +33,8 @@
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
 <script>
 
-const markPaid = (id) => {
-	console.log("Marking Student Paid with id " + id )
+const Reallocate = (id) => {
+	console.log("Reallocateing Student with id " + id )
 	fd = new FormData();
 	fd.append('id', id)
 	fetch(window.location.href, {
@@ -42,5 +42,6 @@ const markPaid = (id) => {
 		body: fd
 	}).then(() => window.location.reload());
 }
+
 </script>
 {% endblock javascript %}
