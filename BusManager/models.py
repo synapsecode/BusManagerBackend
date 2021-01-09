@@ -96,7 +96,9 @@ class DriverModel(db.Model):
 			'license_number': self.license_number,
 			'experience': self.experience,
 			'rating': self.average_rating,
-			'image': self.profile_image
+			'image': self.profile_image,
+			'phone_verified': self.phone_verified,
+			'verified': self.is_verified,
 		}
 
 	def __repr__(self):

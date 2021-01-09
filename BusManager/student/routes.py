@@ -22,7 +22,7 @@ gives the student".
 > Which Phone Did you send Money > Verify
 """
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, jsonify, render_template, request, session
 from BusManager.models import *
 from BusManager import db
 from BusManager.main.utils import generate_session_id, send_otp, send_sms, verify_otp
@@ -46,8 +46,8 @@ def register_number():
 	data = request.get_json()
 	name = data['name']
 	phone = data['phone_number']
-	location = data['location']
-	uni_name = data['name']
+	location = data['location'].lower()
+	uni_name = data['name'].lower()
 	uni_addr = data['university_address']
 	home_addr = data['home_address']
 
@@ -80,7 +80,7 @@ def register_number():
 	)
 
 	#send_otp(phone)
-	send_otp('+919611744348')
+	send_otp('+918904995101')
 	db.session.add(student)
 	db.session.commit()
 
@@ -89,16 +89,16 @@ def register_number():
 @student.route("/resend_otp/<phone>")
 def resend_otp(phone):
 	#send_otp(phone)
-	send_otp('+919611744348')
+	send_otp('+918904995101')
 	return jsonify({'status':200, 'message':'OK'})
 
 @student.route("/verifyphone/<phone>/<otp>")
 def verify_student_otp(phone, otp):
 	# sender_phone = phone
-	sender_phone = "+919611744348"
+	sender_phone = "+918904995101"
 	is_correct = verify_otp(sender_phone, otp)
 	if(is_correct):
-		student = StudentModel.query.filter_by(phone=sender_phone).first()
+		student = StudentModel.query.filter_by(phone=phone).first()
 		if(not student): return jsonify({'status':0, 'message':'No student with that Phone Number'})
 		student.phone_verified = True
 		db.session.commit()
@@ -107,17 +107,18 @@ def verify_student_otp(phone, otp):
 
 @student.route("/login/<phone>", methods=['GET', 'POST'])
 def login_student(phone):
+	sender_phone = "+918904995101" #phone
 	if(request.method == 'POST'):
 		data = request.get_json()
 		otp = data['otp']
-		is_correct = verify_otp(phone, otp)
+		is_correct = verify_otp(sender_phone, otp)
 		if(is_correct):
 			sessionkey = generate_session_id()
 			session[f'SLOG{phone}'] =  sessionkey
 			return jsonify({'status':200, 'message':'OK', 'session_key':sessionkey})
 		return jsonify({'status':0, 'message':'Invalid OTP'})
 	#On Get request, send OTP to number
-	send_otp('+919611744348')
+	send_otp('+918904995101')
 	#send_otp(phone)
 	return jsonify({'status':200, 'message':'OK'})
 
@@ -167,7 +168,7 @@ def edit_profile():
 
 	name = data.get('name') or student.name
 	phone = data.get('phone_number') or student.phone
-	address = data.get('address') or student.home_address
+	address = data.get('home_address') or student.home_address
 
 
 	location = student.location[0]
@@ -178,9 +179,9 @@ def edit_profile():
 
 
 	#Handle Location Changes
-	if(data.get('Location')): 
-		if(LocationModel.query.filter_by(location_name=data['location']).first()):
-			location = LocationModel.query.filter_by(location_name=data['location']).first()
+	if(data.get('location')): 
+		if(LocationModel.query.filter_by(location_name=data['location'].lower()).first()):
+			location = LocationModel.query.filter_by(location_name=data['location'].lower()).first()
 		else:
 			loc = LocationModel(location_name=data['location'])
 			db.session.add(loc)
@@ -188,11 +189,11 @@ def edit_profile():
 			location = loc
 
 	#Handle University Changes
-	if(data.get('university') and data.get('university_address')): 
-		if(UniversityModel.query.filter_by(name=data['university']).first()):
-			university = UniversityModel.query.filter_by(name=data['university']).first()
+	if(data.get('university_name') and data.get('university_address')): 
+		if(UniversityModel.query.filter_by(name=data['university_name'].lower()).first()):
+			university = UniversityModel.query.filter_by(name=data['university_name']).first()
 		else:
-			uni = UniversityModel(name=data['university'], address=data['university_address'])
+			uni = UniversityModel(name=data['university_name'], address=data['university_address'].lower())
 			db.session.add(uni)
 			db.session.commit()
 			university = uni
@@ -202,7 +203,9 @@ def edit_profile():
 
 	if(data['phone_number'] != student.phone):
 		#Number Changed -> Verify Number
-		send_otp(data['phone_number'])
+		student.phone_verified = False
+		# send_otp(data['phone_number'])
+		send_otp('+918904995101')
 		#On app, show the Verify OTP Screen and send get request to /verifyphone
 
 	student.name = name

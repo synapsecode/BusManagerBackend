@@ -56,7 +56,7 @@ def driver_register():
 
 	#Send the OTP Immediately after Registration
 	# send_otp(phone)
-	send_otp('+919611744348')
+	send_otp('+918904995101')
 
 	return jsonify({
 		'status': 200,
@@ -66,37 +66,39 @@ def driver_register():
 @driver.route("/resend_otp/<phone>")
 def resend_otp(phone):
 	#send_otp(phone)
-	send_otp('+919611744348')
+	send_otp('+918904995101')
 	return jsonify({'status':200, 'message':'OK'})
 
 @driver.route("/verifyphone/<phone>/<otp>")
 def verify_driver_otp(phone, otp):
 	# sender_phone = phone
-	sender_phone = "+919611744348"
+	sender_phone = "+918904995101"
 	is_correct = verify_otp(sender_phone, otp)
 	if(is_correct):
-		driver = DriverModel.query.filter_by(phone=sender_phone).first()
+		driver = DriverModel.query.filter_by(phone=phone).first()
 		if(not driver): return jsonify({'status':0, 'message':'No Driver with that Phone Number'})
 		driver.phone_verified = True
 		db.session.commit()
+		print(f"{driver} -> {driver.phone_verified}")
 		return jsonify({'status':200, 'message':'OK'})
 	return jsonify({'status':0, 'message':'Incorrect OTP'})
 
 
 @driver.route("/login/<phone>", methods=['GET', 'POST'])
 def login_driver(phone):
+	pn = '+918904995101'
 	if(request.method == 'POST'):
 		data = request.get_json()
 		otp = data['otp']
-		is_correct = verify_otp(phone, otp)
+		is_correct = verify_otp(pn, otp)
 		if(is_correct):
 			sessionkey = generate_session_id()
 			session[f'DLOG{phone}'] =  sessionkey
 			return jsonify({'status':200, 'message':'OK', 'session_key':sessionkey})
 		return jsonify({'status':0, 'message':'Invalid OTP'})
 	#On Get request, send OTP to number
-	send_otp('+919611744348')
-	#send_otp(phone)
+	send_otp(pn)
+	# send_otp(pn)
 	return jsonify({'status':200, 'message':'OK'})
 
 
@@ -125,13 +127,15 @@ def allow_student():
 def add_rating():
 	data = request.get_json()
 	license_number = data['license_number']
-	phone = int(data['student_phone'])
+	phone = data['student_phone']
 	rating = int(data['rating'])
 	driver = DriverModel.query.filter_by(license_number=license_number).first()
 	student = StudentModel.query.filter_by(phone=phone).first()
 	if(not driver):  return jsonify({'status':0, 'message':'Invalid License Number'})
 	if(not student): return jsonify({'status':0, 'message':'Invalid Student Phone Number'})
-	driver.add_rating(rating) #Adds the Rating & Averages it
+	if( not any([(J.student == student) for J in driver.journeys]) ):
+		return jsonify({'status':0, 'message':'Cannot Rate as Student has not travelled with Student'})
+	driver.add_rating(rating)
 	return jsonify({'status':200, 'message':'OK'})
 
 @driver.route("/edit_profile", methods=['POST'])
@@ -149,10 +153,10 @@ def edit_profile():
 	location = driver.location[0]
 	location.drivers.remove(driver) #Remove Existing Location
 	if(data['location']): 
-		if(LocationModel.query.filter_by(location_name=data['location']).first()):
-			location = LocationModel.query.filter_by(location_name=data['location']).first()
+		if(LocationModel.query.filter_by(location_name=data['location'].lower()).first()):
+			location = LocationModel.query.filter_by(location_name=data['location'].lower()).first()
 		else:
-			loc = LocationModel(location_name=data['location'])
+			loc = LocationModel(location_name=data['location'].lower())
 			db.session.add(loc)
 			db.session.commit()
 			location = loc
@@ -166,7 +170,9 @@ def edit_profile():
 
 	if(data['phone_number'] != driver.phone):
 		#Number Changed -> Verify Number
-		send_otp(data['phone_number'])
+		# send_otp(data['phone_number'])
+		driver.phone_verified = False
+		send_otp('+918904995101')
 		#On app, show the Verify OTP Screen and send get request to /verifyphone
 
 	driver.name = name

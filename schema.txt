@@ -119,12 +119,18 @@ Admin
 		-> Returns:
 			Status: 200(OK), 0(Invalid Student/Driver, Not Paid, Location Doesnt Match)
 
+		Example:
+			{
+				"student_id":"ZsTIGw",
+				"license_number":"hhjshsfhfh774748"
+			}
+
 	-> /add_rating (POST)
 		-> Accepts:
 			license_number, student_phone, rating
 		Used to Rate the Driver
 		-> Returns 
-			Status: 200(OK), 0(Invalid Student/Driver)
+			Status: 200(OK), 0(Invalid Student/Driver, CantVoteasHasntTravelled)
 
 		Example:
 			{

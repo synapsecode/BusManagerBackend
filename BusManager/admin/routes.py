@@ -23,7 +23,7 @@ Basically All the GLobal Information! > FlaskWTF
 def admin_home():
 	
 	lapsed_students = len([s for s in StudentModel.query.all() if s.is_lapsed])
-	unpaid_students = len([s for s in StudentModel.query.all() if not s.is_paid])
+	unpaid_students = len([s for s in StudentModel.query.all() if not s.is_paid and not s.is_lapsed])
 	unverified_drivers = len([d for d in DriverModel.query.all() if not d.is_verified])
 	return render_template(
 		'admin_home.html',
@@ -61,6 +61,7 @@ def mark_payment_status():
 		id =int(data['id'])
 		student = StudentModel.query.filter_by(id=id).first()
 		if(not student): return jsonify({'status':0, 'message':'Invalid ID'})
+		print(f"Marking Paid : {student}")
 		student.is_paid = True
 		student.utc_last_paid = datetime.datetime.utcnow()
 		db.session.commit()
@@ -76,7 +77,7 @@ def mark_payment_status():
 			print(f"{s} is OverDue. Cancelling Subscription")
 			db.session.commit()
 
-	students = [s for s in students if not s.is_paid]
+	students = [s for s in students if not s.is_paid and not s.is_lapsed]
 
 	return render_template('markpaymentstatus.html', title='Mark Payment Status', students=students)
 

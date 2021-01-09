@@ -13,7 +13,7 @@ def generate_session_id():
 #This function verifies the session ID.
 def verify_session_id(stype, phone, sess_id):
 	prefix = 'DLOG' if(stype == 'driver') else 'SLOG'
-	session_id = session.get(f'DLOG{phone}')
+	session_id = session.get(f'{prefix}{phone}')
 	if(not session_id): return False
 	if(sess_id == session_id): return True
 	return False
