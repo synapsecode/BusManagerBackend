@@ -41,7 +41,7 @@ class LocationModel(db.Model):
 	#Co-ordinates and other stuff
 
 	def __init__(self, location_name):
-		self.location_name = location_name
+		self.location_name = location_name.lower()
 
 	def __repr__(self):
 		return f"Location({self.location_name})"
@@ -152,6 +152,14 @@ class UniversityModel(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String)
 	address = db.Column(db.String)
+
+	def __init__(self, name, address):
+		self.name = name.lower()
+		self.address = address
+
+	def __repr__(self):
+		return f"University({self.name})"
+
 	#Other University Details
 
 

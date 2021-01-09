@@ -1,4 +1,17 @@
 BusManager API Schema
+
+Considerations:
+Location & university needs Suggestions so that different
+people do not change university spelling
+Location => General Region
+(JP Nagar, Kormangala etc)
+Phone Number:
+	+<countrycode><phone number>
+	Should be in this format ONLY
+
+
+
+
 We have 3 Primary Sections:
 
 	-> Admin (UI Based)
@@ -116,3 +129,59 @@ Admin
 	-> /getuniversities => Gets all Universities on the Platform
 		
 -> Student API
+	baseroute: /student
+	-> /register (POST)
+		Accepts:
+			name, phone_number, location(Region),
+			university_name, university_address
+			home_addres
+
+		Creates a Student Account and assigns a random student ID
+		Sends OTP to that phone number
+		In app, needs to be immediately followed by /verifyphone
+
+		Returns:
+			200: (Created)
+
+	-> /resend_otp/<phone> (GET) => Resend OTP
+	-> /verifyphone/<phone>/<otp> (GET) => Verify if OTP is correct
+
+	-> /login/<phone> (GET, POST)
+		GET:
+			send OTP to number
+		POST:
+			accepts: otp
+			verify OTP & Return Session Key,
+			This session key must be provided in every subsequent 
+			request to authenticate student
+
+	-> /get_available_buses/<phone> (GET)
+		Returns:
+		200(OK, drivers(LIST <> JSONRep))
+		0(Student Does not Exist)
+
+	-> /checkpaymentstatus/<number> (GET)
+		Should be called right after login from App.
+		-> Basically, if 6 months have lapsed, since creation,
+		account is marked as Lapsed until 25$ is paid to admin and admin
+		reallocates the student ID from Admin panel.
+		-> If 30 days have passed since last paid date then isPaid is
+		false
+
+		Returns:
+			200(OK, isPaid)
+			0((Not Paid, Lapsed, OverDue), False)
+
+
+	-> /edit_profile
+		Accepts:
+		id, name, phone_number, address, location,
+		university, university_address
+
+		Basically Updates Profile but if Phone Number changes,
+		then we send OTP and APp needs to go to /verifyphone
+
+		Returns:
+			200(Updated)
+			0(No Student)
+
