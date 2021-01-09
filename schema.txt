@@ -10,6 +10,10 @@ Phone Number:
 	Should be in this format ONLY
 
 
+Header? 
+{
+	'session_key': ID Recieved after Login
+}
 
 
 We have 3 Primary Sections:
@@ -74,6 +78,16 @@ Admin
 		-> Returns:
 				Status: 200 (OK)
 
+		Example:
+			{
+				"name":"Noel Fargo",
+				"phone_number": "+911111908732",
+				"bus_number": "QWER TYUI OP12 3456",
+				"location":"Whitefield",
+				"license_number":"HGhfhs23nDg332kk",
+				"experience": "12"
+			}
+
 	-> /resend_otp/phone => Resends OTP (GET)
 	-> /verifyphone/<phone>/<otp> (GET)
 		To be called right after Registration
@@ -112,7 +126,14 @@ Admin
 		-> Returns 
 			Status: 200(OK), 0(Invalid Student/Driver)
 
-	-> /edit_profile
+		Example:
+			{
+				"license_number":"HGhfhs23nDg332kk",
+				"student_phone":"912239001221",
+				"rating":"1"
+			}
+
+	-> /edit_profile (POST)
 		-> Accepts:
 			<same as register> + Database ID (Identifier)
 		Edits the drivers data
@@ -123,6 +144,17 @@ Admin
 
 		-> Returns:
 			Status: 200(OK), 0(Invalid ID)
+
+		Example:
+			{
+				"id":1,
+				"name":"Noel Fargo",
+				"phone_number": "+911111908754",
+				"bus_number": "QWER TYUI OP12 3457",
+				"location":"Kormangla",
+				"license_number":"HGhfhs23nDg332kk",
+				"experience": "12"
+			}
 
 -> Main API
 	-> /getlocations => Gets all Locations(Regions) on the Platform -> Used for AutoFill or Suggestions
@@ -142,6 +174,16 @@ Admin
 
 		Returns:
 			200: (Created)
+
+		Example:
+			{
+				"name":"Ruthu Singh",
+				"phone_number": "+912221334599",
+				"home_address": "#2223 Almagordo Koramangala",
+				"location":"Brigade Road",
+				"university_name":"Christ PU",
+				"university_address": "1333 2nd Cross"
+			}
 
 	-> /resend_otp/<phone> (GET) => Resend OTP
 	-> /verifyphone/<phone>/<otp> (GET) => Verify if OTP is correct
@@ -184,4 +226,15 @@ Admin
 		Returns:
 			200(Updated)
 			0(No Student)
+
+		Example:
+			{
+				"id":"1",
+				"name":"Ruthu Singh",
+				"phone_number": "+912221334599",
+				"home_address": "#2223 Almagordo Koramangala",
+				"location":"Brigade Road",
+				"university_name":"Christ PU",
+				"university_address": "1333 2nd Cross"
+			}
 
