@@ -204,6 +204,7 @@ Admin
 			request to authenticate student
 
 	-> /get_available_buses/<phone> (GET)
+		Basically gets all the Buses with the same location(Region)
 		Returns:
 		200(OK, drivers(LIST <> JSONRep))
 		0(Student Does not Exist)
@@ -244,3 +245,9 @@ Admin
 				"university_address": "1333 2nd Cross"
 			}
 
+	-> /mydrivers/<phone> (GET)
+		Basically, gets all the drivers that you have ever travelled with.
+		For Rating Purposes I suppose!
+		Returns:
+			0(Invalid Phone)
+			200(OK+Drivers(LIST))

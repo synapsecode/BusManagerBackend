@@ -217,5 +217,22 @@ def edit_profile():
 	return jsonify({'status':200, 'message':'Updated Data'})
 
 
+@student.route('/mydrivers/<phone>')
+def mydrivers(phone):
+	student = StudentModel.query.filter_by(phone=phone).first()
+	if(not student): return jsonify({'status':0, 'message':'Invalid Student Phone'})
+	drivers = []
+	for J in JourneyModel.query.filter_by(student=student).all():
+		data = {
+			'timestamp': J.timestamp,
+			'driver': J.driver.get_json_representation()
+		}
+		drivers.append(data)
+	return jsonify({
+		'status':200,
+		'message':'OK',
+		'drivers': drivers
+	})
+
 #+12056352635
 #Twilio://ai.krustel:M@na$2003
