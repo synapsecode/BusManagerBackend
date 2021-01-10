@@ -1,8 +1,9 @@
 from flask import render_template, request, Blueprint, jsonify, session
 from BusManager.models import LocationModel, DriverModel, StudentModel, JourneyModel
 from BusManager import db
-from BusManager.main.utils import generate_session_id, send_otp, verify_otp
+from BusManager.main.utils import generate_session_id, send_otp, verify_otp, upload_file_to_cloud
 import random
+import io
 driver = Blueprint('driver', __name__)
 
 """
@@ -183,3 +184,18 @@ def edit_profile():
 	location.drivers.append(driver) #Add Driver to New Location
 	db.session.commit()
 	return jsonify({'status':200, 'message':'Updated Data'})
+
+@driver.route('/update_profile_image/<phone>', methods=['POST'])
+def update_profile_image(phone):
+	driver = DriverModel.query.filter_by(phone=phone).first()
+	if(not driver): return jsonify({'status':0, 'message':'No Driver with that Phone Number'})
+	pictureData = request.files['picture']
+	print(f"Recieved -> {pictureData}")
+	pBytes = io.BytesIO(pictureData.read())
+	uploaded_img = upload_file_to_cloud(pBytes)
+	if(uploaded_img['STATUS'] == 'OK'):
+		driver.profile_image = uploaded_img['URI']
+	else:
+		return jsonify({'status':0, 'message':'Could not Upload image to Cloud (500)'})
+	db.session.commit()
+	return jsonify({'status':200, 'message':'Updated Profile Image'})

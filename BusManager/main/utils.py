@@ -2,12 +2,11 @@ from flask import session, current_app, config
 from BusManager.config import Config
 import random
 import time
-
-
-def generate_session_id():
-	cset = [*[str(i) for i in range(0,10)],*[chr(x) for x in range(65,91)], *[chr(x) for x in range(97,123)]]
-	session_id = ''.join([random.choice(cset) for _ in range(16)])
-	return session_id
+import io
+import os
+from cloudinary.uploader import upload
+from cloudinary.utils import cloudinary_url
+import time
 
 #For Authentication Purposes, After login, the user recieves back a session ID.
 #This function verifies the session ID.
@@ -18,6 +17,51 @@ def verify_session_id(stype, phone, sess_id):
 	if(sess_id == session_id): return True
 	return False
 	
+
+def upload_file_to_cloud(filebytes, filetype=None):
+	try:
+		start = time.time()
+		# Initialize Variables
+		objectURI = ""
+		if(filetype != None):
+			uploaded_object = upload(filebytes,
+									 notification_url="http://localhost",
+									 api_key=Config.CLOUDINARY_CONFIG['api_key'],
+									 resource_type=str(filetype),
+									 api_secret=Config.CLOUDINARY_CONFIG['api_secret'],
+									 cloud_name=Config.CLOUDINARY_CONFIG['cloud_name']
+									 )
+			objectURI = uploaded_object['secure_url']
+		else:
+			uploaded_object = upload(filebytes,
+									 notification_url="http://localhost",
+									 api_key=Config.CLOUDINARY_CONFIG['api_key'],
+									 api_secret=Config.CLOUDINARY_CONFIG['api_secret'],
+									 cloud_name=Config.CLOUDINARY_CONFIG['cloud_name']
+									 )
+			objectURI = uploaded_object['secure_url']
+
+		end = time.time()
+		print(f"TOOK {int(end-start)} seconds to finish")
+		return({
+			"STATUS": "OK",
+			"URI": str(objectURI),
+		})
+	except Exception as e:
+		print("EERRRRRRR", e)
+		return({
+			"STATUS": "ERR",
+			"ERRCODE": str(e)
+		})
+
+
+
+def generate_session_id():
+	cset = [*[str(i) for i in range(0,10)],*[chr(x) for x in range(65,91)], *[chr(x) for x in range(97,123)]]
+	session_id = ''.join([random.choice(cset) for _ in range(16)])
+	return session_id
+
+
 
 def send_sms(msg, phone):
 	cfg = Config()

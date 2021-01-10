@@ -11,3 +11,9 @@ class Config:
 	
 	TWILIO_ACCOUNT_SID = 'AC3fa45717b2f301de424eb588892047d7'
 	TWILIO_AUTH_TOKEN = 'f163cc27352e8bb99d01c8d02cbd43c7'
+
+	CLOUDINARY_CONFIG = {
+		"api_key": "597356837268799",
+		"api_secret": "MgLEKQS1aHJs6TVkGNrv-mfneY0",
+		"cloud_name": "krustel-inc"
+	}
