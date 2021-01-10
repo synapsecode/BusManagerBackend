@@ -25,7 +25,7 @@ gives the student".
 from flask import Blueprint, jsonify, render_template, request, session
 from BusManager.models import *
 from BusManager import db
-from BusManager.main.utils import generate_session_id, send_otp, send_sms, verify_otp
+from BusManager.main.utils import generate_session_id, send_otp, send_sms, verify_otp, verify_session_key
 import random
 import datetime
 
@@ -114,17 +114,30 @@ def login_student(phone):
 		is_correct = verify_otp(sender_phone, otp)
 		if(is_correct):
 			sessionkey = generate_session_id()
-			session[f'SLOG{phone}'] =  sessionkey
+			s = SessionModel(phone=phone, sessionkey=sessionkey)
+			db.session.add(s)
+			db.session.commit()
 			return jsonify({'status':200, 'message':'OK', 'session_key':sessionkey})
 		return jsonify({'status':0, 'message':'Invalid OTP'})
 	#On Get request, send OTP to number
+	student = StudentModel.query.filter_by(phone=phone).first()
+	if(not student): return jsonify({'status':0, 'message':'No Student With that Number'})
 	send_otp('+918904995101')
 	#send_otp(phone)
+	return jsonify({'status':200, 'message':'OK'})
+
+@student.route('/logout/<phone>')
+def logout_student(phone):
+	S = SessionModel.query.filter_by(phone=phone).first()
+	if(not S):  return jsonify({'status':0, 'message':'No Active Session Found'})
+	db.session.delete(S)
+	db.session.commit()
 	return jsonify({'status':200, 'message':'OK'})
 
 
 @student.route("/get_available_buses/<phone_number>")
 def getbuses(phone_number):
+	if(not verify_session_key(request, phone_number)): return jsonify({'status':0, 'message':'SessionFault'})
 	student = StudentModel.query.filter_by(phone=phone_number).first()
 	if(student):
 		s_loc = student.location[0]
@@ -140,6 +153,7 @@ def getbuses(phone_number):
 
 @student.route('/checkpaymentstatus/<number>')
 def checkpaymentstatus(number):
+	if(not verify_session_key(request, number)): return jsonify({'status':0, 'message':'SessionFault'})
 	student = StudentModel.query.filter_by(phone=number).first()
 	if(not student): return jsonify({'status':0, 'message':'No Student Found with that Phone Number'})
 	
@@ -161,14 +175,18 @@ def checkpaymentstatus(number):
 
 @student.route("/edit_profile", methods=['POST'])
 def edit_profile():
+	
 	data = request.get_json()
 	id = data['id'] #Identifier
 	student = StudentModel.query.filter_by(id=id).first()
 	if(not student):  return jsonify({'status':0, 'message':'No Student With that ID'})
 
+
 	name = data.get('name') or student.name
 	phone = data.get('phone_number') or student.phone
 	address = data.get('home_address') or student.home_address
+
+	if(not verify_session_key(request, student.phone)): return jsonify({'status':0, 'message':'SessionFault'})
 
 
 	location = student.location[0]
@@ -204,7 +222,12 @@ def edit_profile():
 	if(data['phone_number'] != student.phone):
 		#Number Changed -> Verify Number
 		student.phone_verified = False
-		# send_otp(data['phone_number'])
+		#If Session Exists, change phone number
+		S = SessionModel.query.filter_by(phone=student.phone).first()
+		if(S):
+			db.session.delete(S)
+			db.session.commit()
+		# send_otp(phone)
 		send_otp('+918904995101')
 		#On app, show the Verify OTP Screen and send get request to /verifyphone
 
@@ -219,6 +242,7 @@ def edit_profile():
 
 @student.route('/mydrivers/<phone>')
 def mydrivers(phone):
+	if(not verify_session_key(request, phone)): return jsonify({'status':0, 'message':'SessionFault'})
 	student = StudentModel.query.filter_by(phone=phone).first()
 	if(not student): return jsonify({'status':0, 'message':'Invalid Student Phone'})
 	drivers = []

@@ -194,6 +194,17 @@ class LapsedStudents(db.Model):
 	def __repr__(self):
 		return self.get_student
 
+class SessionModel(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	phone = db.Column(db.String)
+	sessionkey = db.Column(db.String)
+
+	def __init__(self, phone, sessionkey):
+		self.phone = phone
+		self.sessionkey = sessionkey
+
+	def __repr__(self):
+		return f"Session({self.phone})"
 
 """
 Templates

@@ -1,5 +1,5 @@
 from flask import render_template, request, Blueprint, jsonify, redirect, url_for
-from BusManager.models import LocationModel, UniversityModel
+from BusManager.models import LocationModel, SessionModel, UniversityModel
 from flask_login import login_required
 main = Blueprint('main', __name__)
 
@@ -32,3 +32,11 @@ def get_uni():
 			} for x in unis
 		],
 	})
+
+#Checks if a previous session exists to go on without login procedure
+@main.route('/checksession/<phone>/<sessionkey>')
+def checksession(phone, sessionkey):
+	s = SessionModel.query.filter_by(phone=phone).first()
+	if(not s): return jsonify({'status':0, 'isActive':False, 'message':'NoSession'})
+	if(s.sessionkey != sessionkey): return jsonify({'status':0, 'isActive':False, 'message':'WrongSessionKey'})
+	return jsonify({'status':200, 'isActive':True, 'message':'OK'})

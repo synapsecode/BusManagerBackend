@@ -7,17 +7,21 @@ import os
 from cloudinary.uploader import upload
 from cloudinary.utils import cloudinary_url
 import time
+from BusManager.models import SessionModel
 
-#For Authentication Purposes, After login, the user recieves back a session ID.
+#For Authentication Purposes, After login, the user recieves back a session key.
 #This function verifies the session ID.
-def verify_session_id(stype, phone, sess_id):
-	prefix = 'DLOG' if(stype == 'driver') else 'SLOG'
-	session_id = session.get(f'{prefix}{phone}')
-	if(not session_id): return False
-	if(sess_id == session_id): return True
+
+def verify_session_key(request, phone):
+	if('Session-Key' in request.headers):
+		skey = request.headers['Session-Key']
+		sk = SessionModel.query.filter_by(phone=phone).first()
+		if(not sk):
+			print("NoSession")
+			return False
+		if(skey == sk.sessionkey): return True
 	return False
 	
-
 def upload_file_to_cloud(filebytes, filetype=None):
 	try:
 		start = time.time()

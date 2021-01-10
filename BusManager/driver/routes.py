@@ -1,7 +1,7 @@
 from flask import render_template, request, Blueprint, jsonify, session
-from BusManager.models import LocationModel, DriverModel, StudentModel, JourneyModel
+from BusManager.models import DriverModel, JourneyModel, LocationModel, SessionModel, StudentModel
 from BusManager import db
-from BusManager.main.utils import generate_session_id, send_otp, verify_otp, upload_file_to_cloud
+from BusManager.main.utils import generate_session_id, send_otp, upload_file_to_cloud, verify_otp, verify_session_key
 import random
 import io
 driver = Blueprint('driver', __name__)
@@ -94,12 +94,24 @@ def login_driver(phone):
 		is_correct = verify_otp(pn, otp)
 		if(is_correct):
 			sessionkey = generate_session_id()
-			session[f'DLOG{phone}'] =  sessionkey
+			s = SessionModel(phone=phone, sessionkey=sessionkey)
+			db.session.add(s)
+			db.session.commit()
 			return jsonify({'status':200, 'message':'OK', 'session_key':sessionkey})
 		return jsonify({'status':0, 'message':'Invalid OTP'})
 	#On Get request, send OTP to number
+	student = StudentModel.query.filter_by(phone=phone).first()
+	if(not student): return jsonify({'status':0, 'message':'No Driver With that Number'})
 	send_otp(pn)
 	# send_otp(pn)
+	return jsonify({'status':200, 'message':'OK'})
+
+@driver.route('/logout/<phone>')
+def logout_driver(phone):
+	S = SessionModel.query.filter_by(phone=phone).first()
+	if(not S):  return jsonify({'status':0, 'message':'No Active Session Found'})
+	db.session.delete(S)
+	db.session.commit()
 	return jsonify({'status':200, 'message':'OK'})
 
 
@@ -110,6 +122,7 @@ def allow_student():
 	license_number = data['license_number']
 	student = StudentModel.query.filter_by(student_id=sid).first()
 	driver = DriverModel.query.filter_by(license_number=license_number).first()
+	if(not verify_session_key(request, driver.phone)): return jsonify({'status':0, 'message':'SessionFault'})
 	if(not driver):
 		return jsonify({'status':0, 'message':'Invalid License Number'})
 	if(not student):
@@ -132,6 +145,7 @@ def add_rating():
 	rating = int(data['rating'])
 	driver = DriverModel.query.filter_by(license_number=license_number).first()
 	student = StudentModel.query.filter_by(phone=phone).first()
+	if(not verify_session_key(request, student.phone)): return jsonify({'status':0, 'message':'SessionFault'})
 	if(not driver):  return jsonify({'status':0, 'message':'Invalid License Number'})
 	if(not student): return jsonify({'status':0, 'message':'Invalid Student Phone Number'})
 	if( not any([(J.student == student) for J in driver.journeys]) ):
@@ -145,6 +159,8 @@ def edit_profile():
 	id = data['id'] #Identifier
 	driver = DriverModel.query.filter_by(id=id).first()
 	if(not driver):  return jsonify({'status':0, 'message':'Invalid ID'})
+
+	if(not verify_session_key(request, driver.phone)): return jsonify({'status':0, 'message':'SessionFault'})
 
 	name = data['name'] or driver.name
 	phone = data['phone_number'] or driver.phone
@@ -166,13 +182,17 @@ def edit_profile():
 	#! If Phone number changes, send OTP and Perform Reverification
 
 	#If such sensitive information changes, Driver must be reverified
-	if(data['phone_number'] != driver.phone or data['bus_number'] != driver.bus_number or data['license_number'] != driver.license_number):
+	if(phone != driver.phone or data['bus_number'] != driver.bus_number or data['license_number'] != driver.license_number):
 		driver.is_verified = False
 
-	if(data['phone_number'] != driver.phone):
+	if(phone != driver.phone):
 		#Number Changed -> Verify Number
-		# send_otp(data['phone_number'])
+		# send_otp(phone)
 		driver.phone_verified = False
+		S = SessionModel.query.filter_by(phone=driver.phone).first()
+		if(S):
+			db.session.delete(S)
+			db.session.commit()
 		send_otp('+918904995101')
 		#On app, show the Verify OTP Screen and send get request to /verifyphone
 
@@ -187,6 +207,7 @@ def edit_profile():
 
 @driver.route('/update_profile_image/<phone>', methods=['POST'])
 def update_profile_image(phone):
+	if(not verify_session_key(request, phone)): return jsonify({'status':0, 'message':'SessionFault'})
 	driver = DriverModel.query.filter_by(phone=phone).first()
 	if(not driver): return jsonify({'status':0, 'message':'No Driver with that Phone Number'})
 	pictureData = request.files['picture']
