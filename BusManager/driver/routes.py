@@ -64,6 +64,17 @@ def driver_register():
 		'message': 'Created Driver Account',
 	})
 
+@driver.route('/getdriver/<phone>')
+def getdriver(phone):
+	if(not verify_session_key(request, phone)): return jsonify({'status':0, 'message':'SessionFault'})
+	driver = DriverModel.query.filter_by(phone=phone).first()
+	if(not driver): return jsonify({'status':0, 'message':'No Driver with that Phone Number'})
+	return jsonify({
+		'status':200,
+		'message':'OK',
+		'driver': driver.get_json_representation()	
+	})
+
 @driver.route("/resend_otp/<phone>")
 def resend_otp(phone):
 	#send_otp(phone)
@@ -149,7 +160,7 @@ def add_rating():
 	if(not driver):  return jsonify({'status':0, 'message':'Invalid License Number'})
 	if(not student): return jsonify({'status':0, 'message':'Invalid Student Phone Number'})
 	if( not any([(J.student == student) for J in driver.journeys]) ):
-		return jsonify({'status':0, 'message':'Cannot Rate as Student has not travelled with Student'})
+		return jsonify({'status':0, 'message':'Cannot Rate as Student has not travelled with Driver'})
 	driver.add_rating(rating)
 	return jsonify({'status':200, 'message':'OK'})
 
@@ -193,7 +204,7 @@ def edit_profile():
 		if(S):
 			db.session.delete(S)
 			db.session.commit()
-		send_otp('+918904995101')
+		# send_otp('+918904995101')
 		#On app, show the Verify OTP Screen and send get request to /verifyphone
 
 	driver.name = name

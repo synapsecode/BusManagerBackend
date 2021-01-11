@@ -86,6 +86,17 @@ def register_number():
 
 	return jsonify({'status': 200, 'message': 'Created'})
 
+@student.route('/getstudent/<phone>')
+def getstudent(phone):
+	if(not verify_session_key(request, phone)): return jsonify({'status':0, 'message':'SessionFault'})
+	student = StudentModel.query.filter_by(phone=phone).first()
+	if(not student): return jsonify({'status':0, 'message':'No Student With that Phone Number'})
+	return jsonify({
+		'status':200,
+		'message':'OK',
+		'student': student.get_json_representation()	
+	})
+
 @student.route("/resend_otp/<phone>")
 def resend_otp(phone):
 	#send_otp(phone)
@@ -228,7 +239,7 @@ def edit_profile():
 			db.session.delete(S)
 			db.session.commit()
 		# send_otp(phone)
-		send_otp('+918904995101')
+		# send_otp('+918904995101')
 		#On app, show the Verify OTP Screen and send get request to /verifyphone
 
 	student.name = name

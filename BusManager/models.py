@@ -90,8 +90,9 @@ class DriverModel(db.Model):
 
 	def get_json_representation(self):
 		return {
+			'id': self.id,
 			'name': self.name,
-			'phone': self.phone,
+			'phone_number': self.phone,
 			'bus_number': self.bus_number,
 			'license_number': self.license_number,
 			'experience': self.experience,
@@ -99,6 +100,7 @@ class DriverModel(db.Model):
 			'image': self.profile_image,
 			'phone_verified': self.phone_verified,
 			'verified': self.is_verified,
+			'location': self.location[0].location_name
 		}
 
 	def __repr__(self):
@@ -145,6 +147,20 @@ class StudentModel(db.Model):
 			db.session.commit()
 			return True
 		return False
+
+	def get_json_representation(self):
+		return {
+			'id': self.id,
+			'name': self.name,
+			'phone_number': self.phone,
+			'student_id': self.student_id,
+			'home_address': self.home_address,
+			'university_name': self.university[0].university.name,
+			'university_address': self.university[0].university_address,
+			'phone_verified': self.phone_verified,
+			'isPaid': self.is_paid,
+			'location': self.location[0].location_name
+		}
 
 	def __repr__(self):
 		return f"Student({self.name}, {self.phone})"
