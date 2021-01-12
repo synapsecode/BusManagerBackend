@@ -92,6 +92,16 @@ def verify_driver_otp(phone, otp):
 		driver.phone_verified = True
 		db.session.commit()
 		print(f"{driver} -> {driver.phone_verified}")
+		#---------------------------------LOGINREDIRECT----------------------------------------
+		S = SessionModel.query.filter_by(phone=driver.phone).first()
+		if(not S):
+			sessionkey = generate_session_id()
+			S = SessionModel(phone=phone, sessionkey=sessionkey)
+			db.session.add(s)
+			db.session.commit()
+			return jsonify({'status':220, 'message':'LoginRedirect', 'session_key':sessionkey})
+		#---------------------------------------------------------------------------------------
+
 		return jsonify({'status':200, 'message':'OK'})
 	return jsonify({'status':0, 'message':'Incorrect OTP'})
 
@@ -144,7 +154,7 @@ def allow_student():
 		return jsonify({'status':0, 'message':'Invalid Student Phone Number'})
 	if(not student.is_paid):
 		return jsonify({'status':0, 'message':'Student Has not Paid'})
-	print(f"DriverLocation: {driver.location}    ---->   StudentLocation: {student.location}")
+	# print(f"DriverLocation: {driver.location}    ---->   StudentLocation: {student.location}")
 	if(not student.location == driver.location):
 		return jsonify({'status':0, 'message': 'Locations do not match'})
 	journey = JourneyModel(driver=driver, student=student)
@@ -229,7 +239,7 @@ def update_profile_image(phone):
 	driver = DriverModel.query.filter_by(phone=phone).first()
 	if(not driver): return jsonify({'status':0, 'message':'No Driver with that Phone Number'})
 	pictureData = request.files['picture']
-	print(f"Recieved -> {pictureData}")
+	# print(f"Recieved -> {pictureData}")
 	pBytes = io.BytesIO(pictureData.read())
 	uploaded_img = upload_file_to_cloud(pBytes)
 	if(uploaded_img['STATUS'] == 'OK'):

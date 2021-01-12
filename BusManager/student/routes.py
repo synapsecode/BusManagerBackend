@@ -66,7 +66,7 @@ def register_number():
 		db.session.commit()
 
 	sid = generate_student_id(6)
-	print(sid)
+	# print(sid)
 	if(StudentModel.query.filter_by(student_id=sid).first()):
 		sid = sid[:2] + name[:2] + str(phone)[:2] #Custom Student ID if Clash Occurs
 
@@ -113,6 +113,15 @@ def verify_student_otp(phone, otp):
 		if(not student): return jsonify({'status':0, 'message':'No student with that Phone Number'})
 		student.phone_verified = True
 		db.session.commit()
+		#---------------------------------LOGINREDIRECT----------------------------------------
+		S = SessionModel.query.filter_by(phone=student.phone).first()
+		if(not S):
+			sessionkey = generate_session_id()
+			S = SessionModel(phone=phone, sessionkey=sessionkey)
+			db.session.add(s)
+			db.session.commit()
+			return jsonify({'status':220, 'message':'LoginRedirect', 'session_key':sessionkey})
+		#---------------------------------------------------------------------------------------
 		return jsonify({'status':200, 'message':'OK'})
 	return jsonify({'status':0, 'message':'Incorrect OTP'})
 
@@ -156,7 +165,7 @@ def getbuses(phone_number):
 	student = StudentModel.query.filter_by(phone=phone_number).first()
 	if(student):
 		s_loc = student.location[0]
-		print(s_loc)
+		# print(s_loc)
 		available_drivers = s_loc.drivers.all()
 		return jsonify({
 				'status': 200,

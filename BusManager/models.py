@@ -142,7 +142,7 @@ class StudentModel(db.Model):
 	def is_lapsed(self):
 		if(not self.created_on): return False
 		time_delta = (datetime.utcnow() - self.created_on).days
-		print("TimeDelta", time_delta, self.created_on)
+		# print("TimeDelta", time_delta, self.created_on)
 		if(time_delta > 180):
 			self.is_paid = False
 			if(not LapsedStudents.query.filter_by(sid=self.id).first()):
