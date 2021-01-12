@@ -38,9 +38,9 @@ def driver_register():
 	license_number = data['license_number']
 	experience = int(data['experience'])
 	#If Location Exists get it.
-	loc = LocationModel.query.filter_by(location_name=location).first()
+	loc = LocationModel.query.filter_by(location_name=location.lower()).first()
 	if(loc == None):
-		loc = LocationModel(location_name=location)
+		loc = LocationModel(location_name=location.lower())
 		db.session.add(loc)
 		db.session.commit()
 	
@@ -105,14 +105,18 @@ def login_driver(phone):
 		is_correct = verify_otp(pn, otp)
 		if(is_correct):
 			sessionkey = generate_session_id()
-			s = SessionModel(phone=phone, sessionkey=sessionkey)
-			db.session.add(s)
+			s = SessionModel.query.filter_by(phone=phone).first()
+			if(s):
+				s.sessionkey = sessionkey
+			else:
+				s = SessionModel(phone=phone, sessionkey=sessionkey)
+				db.session.add(s)
 			db.session.commit()
 			return jsonify({'status':200, 'message':'OK', 'session_key':sessionkey})
 		return jsonify({'status':0, 'message':'Invalid OTP'})
 	#On Get request, send OTP to number
-	student = StudentModel.query.filter_by(phone=phone).first()
-	if(not student): return jsonify({'status':0, 'message':'No Driver With that Number'})
+	driver = DriverModel.query.filter_by(phone=phone).first()
+	if(not driver): return jsonify({'status':0, 'message':'No Driver With that Number'})
 	send_otp(pn)
 	# send_otp(pn)
 	return jsonify({'status':200, 'message':'OK'})
@@ -181,9 +185,8 @@ def edit_profile():
 	location = driver.location[0]
 	location.drivers.remove(driver) #Remove Existing Location
 	if(data['location']): 
-		if(LocationModel.query.filter_by(location_name=data['location'].lower()).first()):
-			location = LocationModel.query.filter_by(location_name=data['location'].lower()).first()
-		else:
+		location = LocationModel.query.filter_by(location_name=data['location'].lower()).first()
+		if(not location):
 			loc = LocationModel(location_name=data['location'].lower())
 			db.session.add(loc)
 			db.session.commit()
@@ -198,13 +201,17 @@ def edit_profile():
 
 	if(phone != driver.phone):
 		#Number Changed -> Verify Number
-		# send_otp(phone)
+		
 		driver.phone_verified = False
 		S = SessionModel.query.filter_by(phone=driver.phone).first()
 		if(S):
-			db.session.delete(S)
+			S.phone = phone
 			db.session.commit()
-		# send_otp('+918904995101')
+		# if(S):
+		# 	db.session.delete(S)
+		# 	db.session.commit()
+		send_otp('+918904995101')
+		# send_otp(phone)
 		#On app, show the Verify OTP Screen and send get request to /verifyphone
 
 	driver.name = name

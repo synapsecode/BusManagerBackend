@@ -1,4 +1,4 @@
-from flask import session, current_app, config
+from flask import current_app, config
 from BusManager.config import Config
 import random
 import time
@@ -65,7 +65,7 @@ def generate_session_id():
 	session_id = ''.join([random.choice(cset) for _ in range(16)])
 	return session_id
 
-
+otpstorage = {}
 
 def send_sms(msg, phone):
 	cfg = Config()
@@ -83,24 +83,29 @@ def otp_generator():
 
 def send_otp(phone):
 	otp = otp_generator()
-	session[phone] = otp
-	session[f'T-{phone}'] = int(time.time())
+	print(f"OTP -> {otp}")
+	# session[phone] = otp
+	# session[f'T-{phone}'] = int(time.time())
+	otpstorage[phone] = otp
+	otpstorage[f'T-{phone}'] = int(time.time())
+	print(otpstorage)
 	send_sms(otp, phone) #Send the Message
 
 #?Essentially We use OTP To verify number
 def verify_otp(phone, otp):
 	TIMEOUT = 75
 	ct = int(time.time())
-	if(not session.get(phone)): return False
-	if(not session.get(f'T-{phone}')): return False
-	print(f"Session OTP Req: {phone} -> {session.get(phone)} === {otp} T:{ct - session.get(f'T-{phone}')}s")
-	if((ct - session.get(f'T-{phone}') >= TIMEOUT)):
+	print(phone, otp, otpstorage)
+	if(not otpstorage.get(phone)): return False
+	if(not otpstorage.get(f'T-{phone}')): return False
+	print(f"Session OTP Req: {phone} -> {otpstorage.get(phone)} === {otp} T:{ct - otpstorage.get(f'T-{phone}')}s")
+	if((ct - otpstorage.get(f'T-{phone}') >= TIMEOUT)):
 		print("OTP Session Timed Out")
-		session.pop(phone, None)
-		session.pop(f'T-{phone}', None)
+		otpstorage.pop(phone, None)
+		otpstorage.pop(f'T-{phone}', None)
 		return False
-	if(int(otp) == int(session.get(phone))):
-		session.pop(phone, None)
-		session.pop(f'T-{phone}', None)
+	if(int(otp) == int(otpstorage.get(phone))):
+		otpstorage.pop(phone, None)
+		otpstorage.pop(f'T-{phone}', None)
 		return True
 	return False	

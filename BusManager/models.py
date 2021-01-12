@@ -140,7 +140,10 @@ class StudentModel(db.Model):
 	#created_on gets updated everytime student ID is reallocated via admin.
 	@property
 	def is_lapsed(self):
-		if((datetime.utcnow() - self.created_on).days > 180):
+		if(not self.created_on): return False
+		time_delta = (datetime.utcnow() - self.created_on).days
+		print("TimeDelta", time_delta, self.created_on)
+		if(time_delta > 180):
 			self.is_paid = False
 			if(not LapsedStudents.query.filter_by(sid=self.id).first()):
 				db.session.add(LapsedStudents(self))
@@ -155,8 +158,8 @@ class StudentModel(db.Model):
 			'phone_number': self.phone,
 			'student_id': self.student_id,
 			'home_address': self.home_address,
-			'university_name': self.university[0].university.name,
-			'university_address': self.university[0].university_address,
+			'university_name': self.university[0].name,
+			'university_address': self.university[0].address,
 			'phone_verified': self.phone_verified,
 			'isPaid': self.is_paid,
 			'location': self.location[0].location_name

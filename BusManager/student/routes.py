@@ -125,8 +125,12 @@ def login_student(phone):
 		is_correct = verify_otp(sender_phone, otp)
 		if(is_correct):
 			sessionkey = generate_session_id()
-			s = SessionModel(phone=phone, sessionkey=sessionkey)
-			db.session.add(s)
+			s = SessionModel.query.filter_by(phone=phone).first()
+			if(s):
+				s.sessionkey = sessionkey
+			else:
+				s = SessionModel(phone=phone, sessionkey=sessionkey)
+				db.session.add(s)
 			db.session.commit()
 			return jsonify({'status':200, 'message':'OK', 'session_key':sessionkey})
 		return jsonify({'status':0, 'message':'Invalid OTP'})
@@ -167,12 +171,14 @@ def checkpaymentstatus(number):
 	if(not verify_session_key(request, number)): return jsonify({'status':0, 'message':'SessionFault'})
 	student = StudentModel.query.filter_by(phone=number).first()
 	if(not student): return jsonify({'status':0, 'message':'No Student Found with that Phone Number'})
-	
-	if(not student.is_paid): return jsonify({'status': 200, 'message':'OK', 'isPaid':False})
 
 	#Check if 6 months lapsed
 	if(student.is_lapsed):
-		return jsonify({'status': 0, 'message':'6 Months Completed. Please StudentID Must be renewed', 'isPaid':False})
+		return jsonify({'status': 6, 'message':'6 Months Completed. StudentID Must be renewed', 'isPaid':False})
+	
+	if(not student.is_paid): return jsonify({'status': 200, 'message':'Payment Not Done', 'isPaid':False})
+
+	
 
 	#Checking if Payment OverDue
 	if((datetime.datetime.utcnow() - student.utc_last_paid).days > 30):
@@ -230,16 +236,16 @@ def edit_profile():
 
 	#! If Phone number changes, send OTP and Perform Reverification
 
-	if(data['phone_number'] != student.phone):
+	if(phone != student.phone):
 		#Number Changed -> Verify Number
 		student.phone_verified = False
 		#If Session Exists, change phone number
 		S = SessionModel.query.filter_by(phone=student.phone).first()
-		if(S):
-			db.session.delete(S)
-			db.session.commit()
+		#Update the Session
+		S.phone = phone
+		db.session.commit()
 		# send_otp(phone)
-		# send_otp('+918904995101')
+		send_otp('+918904995101')
 		#On app, show the Verify OTP Screen and send get request to /verifyphone
 
 	student.name = name
