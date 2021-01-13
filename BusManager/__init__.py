@@ -12,6 +12,7 @@ login_manager = LoginManager()
 login_manager.login_view = 	'admin.adminlogin'
 login_manager.login_message_category = 'info'
 
+
 def create_app(config_class=Config):
 	app = Flask(__name__)
 	app.config.from_object(Config)
@@ -44,3 +45,5 @@ def create_database():
 		db.create_all()
 		db.session.commit()
 	print("Successfully Created Database")
+
+ac = create_app().app_context()

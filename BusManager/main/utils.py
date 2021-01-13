@@ -7,7 +7,8 @@ import os
 from cloudinary.uploader import upload
 from cloudinary.utils import cloudinary_url
 import time
-from BusManager.models import SessionModel
+from BusManager.models import SessionModel, OTPModel
+from BusManager import db
 
 #For Authentication Purposes, After login, the user recieves back a session key.
 #This function verifies the session ID.
@@ -84,28 +85,30 @@ def otp_generator():
 def send_otp(phone):
 	otp = otp_generator()
 	print(f"OTP -> {otp}")
-	# session[phone] = otp
-	# session[f'T-{phone}'] = int(time.time())
-	otpstorage[phone] = otp
-	otpstorage[f'T-{phone}'] = int(time.time())
-	# print(otpstorage)
+	T = int(time.time())
+	O = OTPModel.query.filter_by(phone=phone).first()
+	if(O):
+		O.otp = otp
+		O.timestamp = T
+	else:
+		O = OTPModel(phone=phone, otp=otp, timestamp=T)
+		db.session.add(O)
+	db.session.commit()
 	send_sms(otp, phone) #Send the Message
 
 #?Essentially We use OTP To verify number
 def verify_otp(phone, otp):
 	TIMEOUT = 75
 	ct = int(time.time())
-	print(phone, otp, otpstorage)
-	if(not otpstorage.get(phone)): return False
-	if(not otpstorage.get(f'T-{phone}')): return False
-	print(f"Session OTP Req: {phone} -> {otpstorage.get(phone)} === {otp} T:{ct - otpstorage.get(f'T-{phone}')}s")
-	if((ct - otpstorage.get(f'T-{phone}') >= TIMEOUT)):
-		print("OTP Session Timed Out")
-		otpstorage.pop(phone, None)
-		otpstorage.pop(f'T-{phone}', None)
-		return False
-	if(int(otp) == int(otpstorage.get(phone))):
-		otpstorage.pop(phone, None)
-		otpstorage.pop(f'T-{phone}', None)
-		return True
-	return False	
+	O = OTPModel.query.filter_by(phone=phone).first()
+	if(not O): return False
+	timedelta = ct - O.timestamp
+	print(f"SessionOTPRequest: ({phone} -> {O.otp} === {otp}) : {timedelta}s ")
+	ret = False
+	if(timedelta >= TIMEOUT):
+		print("OTPSessionTimedOut")
+	if(int(otp) == O.otp):
+		ret = True
+	db.session.delete(O)
+	db.session.commit()
+	return ret	

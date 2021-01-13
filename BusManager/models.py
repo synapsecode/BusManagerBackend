@@ -225,6 +225,21 @@ class SessionModel(db.Model):
 	def __repr__(self):
 		return f"Session({self.phone})"
 
+class OTPModel(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	phone = db.Column(db.String)
+	otp = db.Column(db.Integer)
+	timestamp = db.Column(db.Integer)
+
+	def __init__(self, phone, otp, timestamp):
+		self.phone = phone
+		self.otp = otp
+		self.timestamp = timestamp
+		
+	
+	def __repr__(self):
+		return f"OTP({self.phone}, {self.otp})"
+
 """
 Templates
 Driver
