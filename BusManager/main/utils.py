@@ -95,7 +95,7 @@ def send_otp(phone):
 def verify_otp(phone, otp):
 	TIMEOUT = 75
 	ct = int(time.time())
-	# print(phone, otp, otpstorage)
+	print(phone, otp, otpstorage)
 	if(not otpstorage.get(phone)): return False
 	if(not otpstorage.get(f'T-{phone}')): return False
 	print(f"Session OTP Req: {phone} -> {otpstorage.get(phone)} === {otp} T:{ct - otpstorage.get(f'T-{phone}')}s")
