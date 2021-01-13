@@ -47,7 +47,7 @@ def register_number():
 	name = data['name']
 	phone = data['phone_number']
 	location = data['location'].lower()
-	uni_name = data['name'].lower()
+	uni_name = data['university_name'].lower()
 	uni_addr = data['university_address']
 	home_addr = data['home_address']
 
@@ -118,7 +118,7 @@ def verify_student_otp(phone, otp):
 		if(not S):
 			sessionkey = generate_session_id()
 			S = SessionModel(phone=phone, sessionkey=sessionkey)
-			db.session.add(s)
+			db.session.add(S)
 			db.session.commit()
 			return jsonify({'status':220, 'message':'LoginRedirect', 'session_key':sessionkey})
 		#---------------------------------------------------------------------------------------

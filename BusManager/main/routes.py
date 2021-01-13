@@ -40,3 +40,7 @@ def checksession(phone, sessionkey):
 	if(not s): return jsonify({'status':0, 'isActive':False, 'message':'NoSession'})
 	if(s.sessionkey != sessionkey): return jsonify({'status':0, 'isActive':False, 'message':'WrongSessionKey'})
 	return jsonify({'status':200, 'isActive':True, 'message':'OK'})
+
+
+#admin
+#$2b$12$gGsTgbXFPx.lvfDgMwzFb.1gOd.OFWvSwm6iGiW8f0bRvYLh1btEG

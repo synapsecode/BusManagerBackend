@@ -97,7 +97,7 @@ def verify_driver_otp(phone, otp):
 		if(not S):
 			sessionkey = generate_session_id()
 			S = SessionModel(phone=phone, sessionkey=sessionkey)
-			db.session.add(s)
+			db.session.add(S)
 			db.session.commit()
 			return jsonify({'status':220, 'message':'LoginRedirect', 'session_key':sessionkey})
 		#---------------------------------------------------------------------------------------
