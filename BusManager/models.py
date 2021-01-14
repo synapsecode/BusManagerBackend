@@ -8,6 +8,7 @@ from flask_login import UserMixin
 def load_user(user_id):
     return AdminUser.query.get(int(user_id))
 
+
 class AdminUser(db.Model, UserMixin):
 	id = db.Column(db.Integer, primary_key=True)
 	username = db.Column(db.String)
@@ -35,6 +36,18 @@ university_association = db.Table(
 	db.Column('university_id', db.Integer, db.ForeignKey('university_model.id')),
 )
 
+student_timing_association = db.Table(
+	'StudentTimingAssociations',
+	db.Column('student_id', db.Integer, db.ForeignKey('student_model.id')),
+	db.Column('timing_id', db.Integer, db.ForeignKey('timing_model.id'))
+)
+
+driver_timing_association = db.Table(
+	'DriverTimingAssociations',
+	db.Column('driver_id', db.Integer, db.ForeignKey('driver_model.id')),
+	db.Column('timing_id', db.Integer, db.ForeignKey('timing_model.id'))
+)
+
 class LocationModel(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	location_name = db.Column(db.String)
@@ -45,6 +58,60 @@ class LocationModel(db.Model):
 
 	def __repr__(self):
 		return f"Location({self.location_name})"
+
+def rectify_timings(start, end):
+	start = start.strip().upper()
+	end = end.strip().upper()
+	#Start
+	sparts = start.split(':')
+	sH = sparts[0].rjust(2, '0')
+	sM = sparts[1]
+	if(len(sM) == 2):
+		sM = f"{sM}{'AM' if(int(sH) < 12) else 'PM'}"
+	start = f"{sH}:{sM}"
+	#End
+	eparts = end.split(':')
+	eH = eparts[0].rjust(2, '0')
+	eM = eparts[1]
+	if(len(eM) == 2):
+		eM = f"{eM}{'PM' if ((int(eH) < int(sH)) or (int(eH) >= 12)) else 'AM'}"
+	end = f"{eH}:{eM}"
+	return start, end
+
+class TimingModel(db.Model):
+	#<HH>:<MM><AM | PM>
+	id = db.Column(db.Integer, primary_key=True)
+	start = db.Column(db.String) #08:30AM
+	end = db.Column(db.String) #03:40PM
+
+	def __init__(self, start, end):
+		self.start, self.end = rectify_timings(start, end)
+
+	def __repr__(self):
+		return f"Timing({self.start} -> {self.end})"
+	
+class NotificationModel(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	driver_id = db.Column(db.Integer, db.ForeignKey('driver_model.id'))
+	message = db.Column(db.String)
+	timestamp = db.Column(db.DateTime, default=datetime.utcnow())
+
+	def __init__(self, driver, message):
+		self.message = message
+		driver.notifications.append(self)
+
+	def __repr__(self):
+		return f"Notification({self.driver} -> {self.message})"
+
+	@property
+	def recipients(self):
+		#Show only notifications for one day
+		if((datetime.utcnow() - self.timestamp).days < 1):
+			driver = self.driver
+			students = StudentModel.query.filter_by(location=driver.location, timings=driver.timings).all()
+			return students
+		return []
+
 
 class DriverModel(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -63,10 +130,14 @@ class DriverModel(db.Model):
 	phone_verified = db.Column(db.Boolean)
 
 	journeys = db.relationship('JourneyModel', backref='driver')
+
+
 	#affiliated_universities : Basically whichever university they can go to
+	timings = db.relationship('TimingModel', secondary=driver_timing_association, backref=db.backref('drivers', lazy='dynamic'))
+	notifications = db.relationship('NotificationModel', backref='driver')
 
 
-	def __init__(self, name, phone, bus_number, license_number, experience, loc ):
+	def __init__(self, name, phone, bus_number, license_number, experience, loc, timings_list):
 		self.name = name
 		self.phone = phone
 		self.bus_number = bus_number
@@ -79,6 +150,8 @@ class DriverModel(db.Model):
 		self.phone_verified = False
 		self.profile_image = "https://www.ballaratosm.com.au/wp-content/uploads/2018/10/blank-profile.jpg" #Blank Hosted Image
 		loc.drivers.append(self)
+		for T in timings_list:
+			T.drivers.append(self)
 		#Add Driver to Location when creating Driver : loc.drivers.append(driver)
 
 	def add_rating(self, rating):
@@ -100,7 +173,8 @@ class DriverModel(db.Model):
 			'image': self.profile_image,
 			'phone_verified': self.phone_verified,
 			'verified': self.is_verified,
-			'location': self.location[0].location_name
+			'location': self.location[0].location_name,
+			'timings': [[T.start, T.end] for T in self.timings],
 		}
 
 	def __repr__(self):
@@ -123,7 +197,13 @@ class StudentModel(db.Model):
 
 	phone_verified = db.Column(db.Boolean)
 
-	#is_lapsed <- Has 6 month period passed?
+	#New Fields
+	dob = db.Column(db.DateTime, nullable=True) #DDMMYYYY -> DateTime obj
+	picture = db.Column(db.String)
+	is_fulltime = db.Column(db.Boolean, nullable=True)
+	timings = db.relationship('TimingModel', secondary=student_timing_association, backref=db.backref('students', lazy='dynamic'))
+	semester = db.Column(db.String, nullable=True)
+
 
 	def __init__(self, name, phone, student_id, home_address, uni, loc):
 		self.name = name
@@ -134,7 +214,19 @@ class StudentModel(db.Model):
 		loc.students.append(self) #Check if Loc exists or else make new one
 		self.is_paid = False
 		self.phone_verified = False
-		#self.is_lapsed = True
+		
+	def add_extras(self,dob, is_fulltime, timing, semester):
+		#New Fields
+		self.dob = datetime(day=dob.split('/')[0], month=dob.split('/')[1], year=dob.split('/')[2])
+		self.is_fulltime = is_fulltime
+		timing.students.append(self)
+		self.picture = "https://www.ballaratosm.com.au/wp-content/uploads/2018/10/blank-profile.jpg"
+		self.semester = semester
+		db.session.commit()
+
+	@property
+	def age(self):
+		return (datetime.utcnow() - self.dob).days // 365
 
 	#Returns true of 6 months (180days have passed since created_on)
 	#created_on gets updated everytime student ID is reallocated via admin.
@@ -162,7 +254,13 @@ class StudentModel(db.Model):
 			'university_address': self.university[0].address,
 			'phone_verified': self.phone_verified,
 			'isPaid': self.is_paid,
-			'location': self.location[0].location_name
+			'location': self.location[0].location_name,
+			#New Data
+			'dob': f"{self.dob.day}/{self.dob.month}/{self.dob.year}" or '00/00/0000',
+			'picture': self.picture,
+			'isFulltime': self.is_fulltime or True,
+			'semester': self.semester or '0',
+			'timings': [self.timings[0].start, self.timings[0].end] or []
 		}
 
 	def __repr__(self):

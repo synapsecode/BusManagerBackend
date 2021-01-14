@@ -10,6 +10,12 @@
 	<small class="subtitle logout"><a class='lgo' href='{{ url_for('admin.logout') }}'>(Logout)</a></small>
 	
 	<div class="opsec">
+		<a class="op" href="{{url_for('admin.data_locations')}}">
+			<center class='holder'>
+				<img src="https://img.icons8.com/color/96/000000/flow-chart.png" class='opico'/>
+			</center>
+			<h5 class='opname'>View<br>Data</h5>
+		</a>
 		<a class="op" href="{{url_for('admin.mark_payment_status')}}">
 			<center class='holder'>
 			<span class="badge">{{unpaid_students}}</span>

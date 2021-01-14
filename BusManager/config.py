@@ -17,3 +17,5 @@ class Config:
 		"api_secret": "MgLEKQS1aHJs6TVkGNrv-mfneY0",
 		"cloud_name": "krustel-inc"
 	}
+
+	DBDOWNLOADPASS = "~1qaz2wsx3edc"

@@ -174,3 +174,61 @@ def delete_students():
 		return redirect(url_for('admin.delete_students'))
 	students = StudentModel.query.all()
 	return render_template('delete_students.html', title='Delete Students', students=students)
+
+#-------------------------------------------DATA---------------------------------------------
+@admin.route('/viewdata/locations')
+@login_required
+def data_locations():
+	locations = LocationModel.query.all()
+	data = []
+	for L in locations:
+		data.append({
+			'location_name': L.location_name,
+			'id': L.id,
+			'members': len(L.students) + len(L.drivers),
+		})
+	return render_template('getdata/locations.html', locations=data, title='Locations')
+
+@admin.route('/viewdata/timings/<tid>')
+@login_required
+def data_timings(tid):
+	location = LocationModel.query.filter_by(id=tid).first()
+	if(not location): return jsonify({'status':0, 'message':'No Such Location'})
+	data = []
+	all_timings = TimingModel.query.all()
+	for T in all_timings:
+		members = 0
+		# for D in T.drivers:
+		# 	if(D.location == location):
+		# 		members += 1
+		# for S in T.students:
+		# 	if(S.location == location):
+		# 		members += 1
+		
+		members += len(T.drivers.filter_by(location=location).all())
+		members += len(T.students.filter_by(location=location).all())
+
+		data.append({
+			'id': T.id,
+			'start': T.start,
+			'end': T.end,
+			'members': members,
+		})
+	
+	return render_template('getdata/timings.html', timings=data, title='timings', location=location.location_name, tid=tid)
+
+@admin.route('/viewdata/grouped_data/<lid>/<tid>')
+@login_required
+def data_allgrouped(lid, tid):
+	T = TimingModel.query.filter_by(id=tid).first()
+	if(not T): return jsonify({'status':0, 'message':'Invalid Timing ID'})
+	L = LocationModel.query.filter_by(id=lid).first()
+	if(not L): return jsonify({'status':0, 'message':'Invalid Location ID'})
+
+
+	students = T.students.filter_by(location=L).all() or []
+	drivers = T.drivers.filter_by(location=L).all() or []
+
+
+	return render_template('getdata/groupeddata.html', timings=T, students=students, drivers=drivers)
+#--------------------------------------------------------------------------------------------

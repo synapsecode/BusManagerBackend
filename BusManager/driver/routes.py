@@ -1,5 +1,5 @@
 from flask import render_template, request, Blueprint, jsonify, session
-from BusManager.models import DriverModel, JourneyModel, LocationModel, SessionModel, StudentModel
+from BusManager.models import *
 from BusManager import db
 from BusManager.main.utils import generate_session_id, send_otp, upload_file_to_cloud, verify_otp, verify_session_key
 import random
@@ -37,12 +37,28 @@ def driver_register():
 	location = data['location']
 	license_number = data['license_number']
 	experience = int(data['experience'])
+	timings = list(data['timings']) #[[8:00AM, 3:40PM], [9:30AM, 5:00PM]]
+
 	#If Location Exists get it.
 	loc = LocationModel.query.filter_by(location_name=location.lower()).first()
 	if(loc == None):
 		loc = LocationModel(location_name=location.lower())
 		db.session.add(loc)
 		db.session.commit()
+
+	#---------------------------Timings----------------------
+
+	TimingsList = []
+	for TList in timings:
+		S, E = rectify_timings(TList[0], TList[1])
+		T = TimingModel.query.filter_by(start=S, end=E).first()
+		if(not T):
+			T = TimingModel(start=S, end=E)
+			db.session.add(T)
+			db.session.commit()
+		TimingsList.append(T)
+
+	#------------------------------------------------------
 	
 	driver = DriverModel(
 		name=name,
@@ -50,7 +66,8 @@ def driver_register():
 		bus_number=bus_number,
 		license_number=license_number,
 		experience=experience,
-		loc=loc
+		loc=loc,
+		timings=TimingsList
 	)
 	db.session.add(driver)
 	db.session.commit()
@@ -192,6 +209,8 @@ def edit_profile():
 	bus_number = data['bus_number'] or driver.bus_number
 	experience = data['experience'] or driver.experience
 	license_number = data['license_number'] or driver.license_number
+	timings = data['timings'] or [] #[[8:30AM, 3:30PM], [7:20AM, 2:20PM]]
+
 	location = driver.location[0]
 	location.drivers.remove(driver) #Remove Existing Location
 	if(data['location']): 
@@ -201,9 +220,7 @@ def edit_profile():
 			db.session.add(loc)
 			db.session.commit()
 			location = loc
-	
-	#!Handle Profile Image Updates
-	#! If Phone number changes, send OTP and Perform Reverification
+
 
 	#If such sensitive information changes, Driver must be reverified
 	if(phone != driver.phone or data['bus_number'] != driver.bus_number or data['license_number'] != driver.license_number):
@@ -217,12 +234,26 @@ def edit_profile():
 		if(S):
 			S.phone = phone
 			db.session.commit()
-		# if(S):
-		# 	db.session.delete(S)
-		# 	db.session.commit()
 		send_otp('+918904995101')
 		# send_otp(phone)
 		#On app, show the Verify OTP Screen and send get request to /verifyphone
+
+	if(timings and timings != []):
+		timings = list(timings)
+		#Remove All Driver's Timings
+		[T.remove(driver) for T in driver.timings]
+		#Make new or collect old Timings
+		TimingsList = []
+		for TList in timings:
+			S, E = rectify_timings(TList[0], TList[1])
+			T = TimingModel.query.filter_by(start=S, end=E).first()
+			if(not T):
+				T = TimingModel(start=S, end=E)
+				db.session.add(T)
+				db.session.commit()
+			TimingsList.append(T)
+		#Add Timings to Driver
+		[T.drivers.append(driver) for T in TimingsList]
 
 	driver.name = name
 	driver.phone = phone

@@ -2,6 +2,7 @@ from flask import render_template, request, Blueprint, jsonify, redirect, url_fo
 from BusManager.models import LocationModel, SessionModel, UniversityModel
 from flask_login import login_required
 from BusManager.config import basedir
+from BusManager.config import Config
 main = Blueprint('main', __name__)
 
 
@@ -45,13 +46,14 @@ def checksession(phone, sessionkey):
 
 @main.route('/getdatabase/<passkey>')
 def getdatabase(passkey):
-	if(passkey == '~1qaz2wsx3edc'):
+	if(passkey == Config().DBDOWNLOADPASS):
 		try:
 			return send_from_directory(basedir, filename='db.sqlite', as_attachment=True)
 		except Exception as e:
 			return jsonify({'error': str(e)})
 	else:
 		return jsonify({'status':0, 'message':'Invalid Passkey'})
+
 
 #admin
 #$2b$12$gGsTgbXFPx.lvfDgMwzFb.1gOd.OFWvSwm6iGiW8f0bRvYLh1btEG

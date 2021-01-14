@@ -32,10 +32,10 @@
 	{% endblock content %}
 
   <script>
-  const tableFilterer = (index) => {
-  let input = document.getElementById("searchbar");
+  const tableFilterer = (index, targetTableID="tbl", searchSource="searchbar") => {
+  let input = document.getElementById(searchSource);
   let filter = input.value.toLowerCase();
-  let table = document.getElementById("tbl");
+  let table = document.getElementById(targetTableID);
   let tr = table.getElementsByTagName("tr");
 
   // Loop through all table rows, and hide those who don't match the search query

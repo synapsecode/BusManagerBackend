@@ -28,6 +28,8 @@ from BusManager import db
 from BusManager.main.utils import generate_session_id, send_otp, send_sms, verify_otp, verify_session_key
 import random
 import datetime
+import io
+from BusManager.main.utils import upload_file_to_cloud
 
 def generate_student_id(l):
 	cset = [*[str(i) for i in range(0,10)],*[chr(x) for x in range(65,91)], *[chr(x) for x in range(97,123)]]
@@ -85,6 +87,34 @@ def register_number():
 	db.session.commit()
 
 	return jsonify({'status': 200, 'message': 'Created'})
+
+@student.route('/add_details', methods=['POST'])
+def add_details():
+	data = request.get_json()
+	phone = data['phone']
+	if(not verify_session_key(request, phone)): return jsonify({'status':0, 'message':'SessionFault'})
+	student = StudentModel.query.filter_by(phone=phone).first()
+	if(not student): return jsonify({'status':0, 'message':'No Student with that Phone number'})
+
+	isFullTime = data['isFullTime'] or True
+	semester = data['semester']
+	dob = data['dob'] #DD/MM/YYYY
+	timing = data['timing'] or [] #[8:30AM, 3:30PM]
+
+	if(timing != []):
+		return jsonify({'status':0, 'message':'Timings(start, end) must be provided'})
+	
+	S, E = rectify_timings(timing[0], timing[1])
+	T = TimingModel.query.filter_by(start=S, end=E).first()
+	if(not T):
+		T = TimingModel(start=S, end=E)
+		db.session.add(T)
+		db.session.commit()
+
+	student.add_extras(dob=dob, timing=T, is_fulltime=isFullTime, semester=semester)
+	return jsonify({'status':200, 'message':'OK'})
+
+
 
 @student.route('/getstudent/<phone>')
 def getstudent(phone):
@@ -212,6 +242,8 @@ def edit_profile():
 	phone = data.get('phone_number') or student.phone
 	address = data.get('home_address') or student.home_address
 
+	timings = data.get('timings') or []
+
 	if(not verify_session_key(request, student.phone)): return jsonify({'status':0, 'message':'SessionFault'})
 
 
@@ -257,10 +289,25 @@ def edit_profile():
 		send_otp('+918904995101')
 		#On app, show the Verify OTP Screen and send get request to /verifyphone
 
+	if(timings != []):
+		timings = list(timings)
+		#Remove All Students's Timings
+		[T.remove(student) for T in student.timings]
+		#Making new or getting old Timings
+		S, E = rectify_timings(timings[0], timings[1])
+		T = TimingModel.query.filter_by(start=S, end=E).first()
+		if(not T):
+			T = TimingModel(start=S, end=E)
+			db.session.add(T)
+			db.session.commit()
+		#Updating Timing
+		T.students.append(student)
+
+
 	student.name = name
 	student.phone = phone
 	student.home_address = address
-	location.students.append(student) #Add Driver to New Location
+	location.students.append(student) #Add Student to New Location
 	university.students.append(student)
 	db.session.commit()
 	return jsonify({'status':200, 'message':'Updated Data'})
@@ -283,6 +330,21 @@ def mydrivers(phone):
 		'message':'OK',
 		'drivers': drivers
 	})
+
+@student.route('/update_profile_image/<phone>', methods=['POST'])
+def update_profile_image(phone):
+	if(not verify_session_key(request, phone)): return jsonify({'status':0, 'message':'SessionFault'})
+	student = StudentModel.query.filter_by(phone=phone).first()
+	if(not student): return jsonify({'status':0, 'message':'No Student with that Phone Number'})
+	pictureData = request.files['picture']
+	pBytes = io.BytesIO(pictureData.read())
+	uploaded_img = upload_file_to_cloud(pBytes)
+	if(uploaded_img['STATUS'] == 'OK'):
+		student.picture = uploaded_img['URI']
+	else:
+		return jsonify({'status':0, 'message':'Could not Upload image to Cloud (500)'})
+	db.session.commit()
+	return jsonify({'status':200, 'message':'Updated Profile Image'})
 
 #+12056352635
 #Twilio://ai.krustel:M@na$2003
