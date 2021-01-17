@@ -95,21 +95,30 @@ class NotificationModel(db.Model):
 	driver_id = db.Column(db.Integer, db.ForeignKey('driver_model.id'))
 	message = db.Column(db.String)
 	timestamp = db.Column(db.DateTime, default=datetime.utcnow())
+	# is_pickup = db.Column(db.Boolean) #else drop
+	
 
-	def __init__(self, driver, message):
+	def __init__(self, driver, message, is_pickup):
+		#Delete old Notifications Periodically
 		self.message = message
 		driver.notifications.append(self)
+		# self.is_pickup = is_pickup
 
 	def __repr__(self):
-		return f"Notification({self.driver} -> {self.message})"
+		return f"Notification({self.driver} -> {self.message}, {self.is_pickup})"
+		
 
-	@property
-	def recipients(self):
+	def get_recipients(self, timing):
 		#Show only notifications for one day
 		if((datetime.utcnow() - self.timestamp).days < 1):
 			driver = self.driver
-			students = StudentModel.query.filter_by(location=driver.location, timings=driver.timings).all()
-			return students
+
+			#Finding Students who have common Timings and Location to be notified
+			students_timing = set(timing.students)
+			students_location = set(driver.location[0].students)
+			common_recipients = students_timing.intersection(students_location)
+
+			return common_recipients
 		return []
 
 
@@ -217,10 +226,14 @@ class StudentModel(db.Model):
 		
 	def add_extras(self,dob, is_fulltime, timing, semester):
 		#New Fields
-		self.dob = datetime(day=dob.split('/')[0], month=dob.split('/')[1], year=dob.split('/')[2])
+		self.dob = datetime(
+			day=int(dob.split('/')[0]), 
+			month=int(dob.split('/')[1]), 
+			year=int(dob.split('/')[2])
+		)
 		self.is_fulltime = is_fulltime
 		timing.students.append(self)
-		self.picture = "https://www.ballaratosm.com.au/wp-content/uploads/2018/10/blank-profile.jpg"
+		self.picture = "https://www.dcrc.co/wp-content/uploads/2019/04/blank-head-profile-pic-for-a-man.jpg" if not self.picture else self.picture
 		self.semester = semester
 		db.session.commit()
 
@@ -256,11 +269,11 @@ class StudentModel(db.Model):
 			'isPaid': self.is_paid,
 			'location': self.location[0].location_name,
 			#New Data
-			'dob': f"{self.dob.day}/{self.dob.month}/{self.dob.year}" or '00/00/0000',
+			'dob':  '00/00/0000' if not self.dob else f"{self.dob.day}/{self.dob.month}/{self.dob.year}" ,
 			'picture': self.picture,
-			'isFulltime': self.is_fulltime or True,
-			'semester': self.semester or '0',
-			'timings': [self.timings[0].start, self.timings[0].end] or []
+			'isFullTime': self.is_fulltime,
+			'semester': '0' if not self.semester else self.semester,
+			'timings': [self.timings[0].start, self.timings[0].end] if self.timings else []
 		}
 
 	def __repr__(self):

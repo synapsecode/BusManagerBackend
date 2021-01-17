@@ -1,7 +1,7 @@
 {% extends 'bs_layout.html' %}
 {% block content %}
 <a class="btn btn-secondary" href="{{url_for('admin.admin_home')}}">Back to Homepage</a>
-<h1 class='display-1'>Delete Students</h1>
+<h1 class='display-1'>Manage Students</h1>
 <br>
 <input type="text" id="searchbar" class="form-control bg-dark text-light" placeholder="Search Student Phone" onkeyup="tableFilterer(3)"><br>
 <table class="table table-striped table-dark" id="tbl">
@@ -11,7 +11,9 @@
       <th scope="col">Student Name</th>
 	  <th scope="col">Student ID</th>
       <th scope="col">Phone</th>
-	  <th scope="col">Delete</th>
+      <th scope="col">Payment Status</th>
+      <th scope="col">View Profile</th>
+	  <th scope="col">Delete Student</th>
     </tr>
   </thead>
   <tbody id='tbdy'>
@@ -21,6 +23,8 @@
         <td>{{e.name}}</td>
         <td>{{e.student_id}}</td>
         <td class='phn'>{{e.phone}}</td>
+        <td class='phn'>{{'Paid' if(e.is_paid) else 'Expired' if(e.is_lapsed) else 'Not Paid'}}</td>
+        <td><button class="btn btn-success" onclick=ViewProfile({{e.id}})>View Profile</button></td>
         <td><button class="btn btn-danger" onclick=Delete({{e.id}})>Delete</button></td>
       </tr>
     {% endfor %}
@@ -41,6 +45,10 @@ const Delete = (id) => {
 		method: 'post',
 		body: fd
 	}).then(() => window.location.reload());
+}
+
+const ViewProfile = (id) => {
+	window.location.href = `${window.location.origin}/admin/studentprofile/${id}`;
 }
 
 </script>

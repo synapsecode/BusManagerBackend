@@ -10,6 +10,7 @@
     <th scope="col">SerialNo</th>
       <th scope="col">Driver Name</th>
 	  <th scope="col">Bus Number</th>
+     <th scope="col">Location(Region)</th>
       <th scope="col">Phone</th>
 	  <th scope="col">Delete</th>
     </tr>
@@ -20,6 +21,8 @@
        <td>{{loop.index}}</td>
         <td>{{e.name}}</td>
         <td>{{e.bus_number}}</td>
+        <td>{{e.location[0].location_name}}</td>
+
         <td class='phn'>{{e.phone}}</td>
         <td><button class="btn btn-danger" onclick=Delete({{e.id}})>Delete</button></td>
       </tr>

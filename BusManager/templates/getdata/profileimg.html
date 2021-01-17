@@ -1,0 +1,29 @@
+{% extends 'bs_layout.html' %}
+{% block content %}
+<h1 class="display-1">Student Profile</h1>
+<br>
+<div class="d-flex mx-5">
+	<img src="{{student.picture}}" class="profimg">
+	<div class="container px-5">
+		<h1>Name: {{student.name}}</h1>
+		<h1>Phone: {{student.phone}}</h1>
+		<h1>Location: {{student.location[0].location_name.capitalize()}}</h1>
+		<h1>StudentID: {{student.student_id}}</h1>
+		<h1>Semester: {{student.semester}}</h1>
+		<h1>University: {{student.university[0].name.capitalize()}}</h1>
+		<h1 >Timings: {{student.timings[0].start}} - {{student.timings[0].end}}</h1>
+		<h1>Payment Status: {{'Paid' if student.is_paid else 'Expired' if student.is_lapsed else 'Not Paid'}}</h1>
+		<h1>isFullTime: {{student.is_fulltime}}</h1>
+	</div>
+</div>
+
+{% endblock content %}
+
+{% block styles %}
+<style>
+.profimg{
+	height: 480px;
+	width: 520px;
+}
+</style>
+{% endblock styles %}

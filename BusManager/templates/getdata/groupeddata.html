@@ -5,7 +5,7 @@
 <hr>
 <h3 class="px-4">Timings:  <span class="mx-3"><span class="btn btn-dark">8:30AM</span> to <span class="btn btn-dark">3:30PM</span> </h3>
 
-<h3 class="px-4">Location: <span class="mx-1"></span><span class="btn btn-primary">Arkere</span></h3>
+<h3 class="px-4">Location: <span class="mx-1"></span><span class="btn btn-primary">{{location}}</span></h3>
 
 <hr>
 <div class="flex">
@@ -30,6 +30,7 @@
 		</tr>
 	</thead>
 	<tbody id='tbdy'>
+
 		{% for e in students %}
 		<tr data-id="SX">
 		<td>{{loop.index}}</td>
@@ -93,9 +94,18 @@
 	display: flex;
 }
 
-#searchbar{
+#studsearch, #drivsearch{
 	height: 50px;
 	margin: auto 20px;
 }
 </style>
 {% endblock styles %}
+
+{% block javascript %}
+<script>
+const ViewProfile = (id) => {
+	window.location.href = `${window.location.origin}/admin/studentprofile/${id}`;
+}
+</script>
+
+{% endblock javascript %}

@@ -160,7 +160,7 @@ def delete_drivers():
 	drivers = DriverModel.query.all()
 	return render_template('delete_drivers.html', title='Delete Drivers', drivers=drivers)
 
-@admin.route("/delete_drivers.html", methods=['GET', 'POST'])
+@admin.route("/managestudents", methods=['GET', 'POST'])
 @login_required
 def delete_students():
 	if(request.method == 'POST'):
@@ -185,7 +185,7 @@ def data_locations():
 		data.append({
 			'location_name': L.location_name,
 			'id': L.id,
-			'members': len(L.students) + len(L.drivers),
+			'members': len(L.students.all()) + len(L.drivers.all()),
 		})
 	return render_template('getdata/locations.html', locations=data, title='Locations')
 
@@ -203,10 +203,12 @@ def data_timings(tid):
 		# 		members += 1
 		# for S in T.students:
 		# 	if(S.location == location):
-		# 		members += 1
+
+		students = [x for x in T.students.all() if x.location[0] == location]
+		drivers = [x for x in T.drivers.all() if x.location[0] == location]
 		
-		members += len(T.drivers.filter_by(location=location).all())
-		members += len(T.students.filter_by(location=location).all())
+		
+		members += len([*students, *drivers])
 
 		data.append({
 			'id': T.id,
@@ -225,10 +227,17 @@ def data_allgrouped(lid, tid):
 	L = LocationModel.query.filter_by(id=lid).first()
 	if(not L): return jsonify({'status':0, 'message':'Invalid Location ID'})
 
+	students = [x for x in T.students.all() if x.location[0] == L]
+	drivers = [x for x in T.drivers.all() if x.location[0] == L]
 
-	students = T.students.filter_by(location=L).all() or []
-	drivers = T.drivers.filter_by(location=L).all() or []
+
+	return render_template('getdata/groupeddata.html', timings=T, students=students, drivers=drivers, location=L.location_name)
 
 
-	return render_template('getdata/groupeddata.html', timings=T, students=students, drivers=drivers)
+@admin.route('/studentprofile/<sid>')
+@login_required
+def student_profile(sid):
+	student = StudentModel.query.filter_by(id=sid).first()
+	if(not student): return jsonify({'status':0, 'message':'No Student'})
+	return render_template('getdata/profileimg.html', title='Student Profile', student=student)
 #--------------------------------------------------------------------------------------------

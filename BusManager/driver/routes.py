@@ -67,7 +67,7 @@ def driver_register():
 		license_number=license_number,
 		experience=experience,
 		loc=loc,
-		timings=TimingsList
+		timings_list=TimingsList
 	)
 	db.session.add(driver)
 	db.session.commit()
@@ -240,8 +240,10 @@ def edit_profile():
 
 	if(timings and timings != []):
 		timings = list(timings)
+		print("Recievedtimings", timings)
 		#Remove All Driver's Timings
-		[T.remove(driver) for T in driver.timings]
+		driver.timings = []
+		db.session.commit()
 		#Make new or collect old Timings
 		TimingsList = []
 		for TList in timings:
@@ -252,8 +254,11 @@ def edit_profile():
 				db.session.add(T)
 				db.session.commit()
 			TimingsList.append(T)
+
+		print("New Timings", TimingsList)
 		#Add Timings to Driver
 		[T.drivers.append(driver) for T in TimingsList]
+		db.session.commit()
 
 	driver.name = name
 	driver.phone = phone
@@ -279,3 +284,60 @@ def update_profile_image(phone):
 		return jsonify({'status':0, 'message':'Could not Upload image to Cloud (500)'})
 	db.session.commit()
 	return jsonify({'status':200, 'message':'Updated Profile Image'})
+
+
+@driver.route('/notifyrecipients', methods=['POST'])
+def notify_recipients():
+	
+	data = request.get_json()
+	phone = data['phone']
+	if(not verify_session_key(request, phone)): return jsonify({'status':0, 'message':'SessionFault'})
+	message = data['message']
+	driver = DriverModel.query.filter_by(phone=phone).first()
+	if(not driver): return jsonify({'status':0, 'message':'No Driver Found'})
+	notification = NotificationModel(driver=driver, message=message)
+	db.session.add(notification)
+	db.session.commit()
+	return jsonify({'status':200, 'message':'OK'})
+
+
+# @driver.route('/notifypickup', methods=['POST'])
+# def notify_pickup():
+# 	data = request.get_json()
+# 	phone = data['phone']
+# 	message = data['message']
+# 	start_time = data['start_time']
+# 	driver = DriverModel.query.filter_by(phone=phone).first()
+# 	if(not driver): return jsonify({'status':0, 'message':'No Driver Found'})
+# 	notification = NotificationModel(
+# 		driver=driver,
+# 		message=message,
+# 		is_pickup=True,
+# 		time=start_time
+# 	)
+# 	db.session.add(notification)
+# 	db.session.commit()
+# 	return jsonify({'status':200, 'message':'OK'})
+
+# @driver.route('/notifydrop', methods=['POST'])
+# def notify_drop():
+# 	data = request.get_json()
+# 	phone = data['phone']
+# 	message = data['message']
+# 	start_time = data['start_time']
+# 	driver = DriverModel.query.filter_by(phone=phone).first()
+# 	if(not driver): return jsonify({'status':0, 'message':'No Driver Found'})
+# 	notification = NotificationModel(
+# 		driver=driver,
+# 		message=message,
+# 		is_pickup=True,
+# 		time=start_time
+# 	)
+# 	db.session.add(notification)
+# 	db.session.commit()
+# 	return jsonify({'status':200, 'message':'OK'})
+#"rkgzK0cvlV6RvwMa"
+#16BuKquPxOfBcpYg
+
+#Student
+#aoff3cWokVYSiGua

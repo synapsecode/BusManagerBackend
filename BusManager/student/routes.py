@@ -96,12 +96,12 @@ def add_details():
 	student = StudentModel.query.filter_by(phone=phone).first()
 	if(not student): return jsonify({'status':0, 'message':'No Student with that Phone number'})
 
-	isFullTime = data['isFullTime'] or True
+	isFullTime = data['isFullTime'] if(data.get('isFullTime')!= None) else True
 	semester = data['semester']
 	dob = data['dob'] #DD/MM/YYYY
 	timing = data['timing'] or [] #[8:30AM, 3:30PM]
 
-	if(timing != []):
+	if(timing == []):
 		return jsonify({'status':0, 'message':'Timings(start, end) must be provided'})
 	
 	S, E = rectify_timings(timing[0], timing[1])
@@ -121,6 +121,7 @@ def getstudent(phone):
 	if(not verify_session_key(request, phone)): return jsonify({'status':0, 'message':'SessionFault'})
 	student = StudentModel.query.filter_by(phone=phone).first()
 	if(not student): return jsonify({'status':0, 'message':'No Student With that Phone Number'})
+	print(student.get_json_representation())
 	return jsonify({
 		'status':200,
 		'message':'OK',
@@ -197,6 +198,8 @@ def getbuses(phone_number):
 		s_loc = student.location[0]
 		# print(s_loc)
 		available_drivers = s_loc.drivers.all()
+		# student_timings = student.timings[0]
+		# available_drivers = [d for d in available_drivers if(student_timings in d.timings)]
 		return jsonify({
 				'status': 200,
 				'message':'OK',
@@ -243,6 +246,12 @@ def edit_profile():
 	address = data.get('home_address') or student.home_address
 
 	timings = data.get('timings') or []
+	dob = data.get('dob') or student.get_json_representation()['dob']
+
+	is_fulltime = data.get('isFullTime')
+	print(is_fulltime)
+
+	semester = data.get('semester') or student.semester
 
 	if(not verify_session_key(request, student.phone)): return jsonify({'status':0, 'message':'SessionFault'})
 
@@ -273,6 +282,9 @@ def edit_profile():
 			db.session.add(uni)
 			db.session.commit()
 			university = uni
+
+	location.students.append(student) #Add Student to New Location
+	university.students.append(student)
 	
 
 	#! If Phone number changes, send OTP and Perform Reverification
@@ -292,7 +304,8 @@ def edit_profile():
 	if(timings != []):
 		timings = list(timings)
 		#Remove All Students's Timings
-		[T.remove(student) for T in student.timings]
+		student.timings = []
+		db.session.commit()
 		#Making new or getting old Timings
 		S, E = rectify_timings(timings[0], timings[1])
 		T = TimingModel.query.filter_by(start=S, end=E).first()
@@ -302,13 +315,24 @@ def edit_profile():
 			db.session.commit()
 		#Updating Timing
 		T.students.append(student)
+		db.session.commit()
 
+	#Updating Date of Birth
+	if(dob != student.get_json_representation()['dob']):
+		# print(dob.split('/'))
+		student.dob = datetime.datetime(
+			day=int(dob.split('/')[0]), 
+			month=int(dob.split('/')[1]), 
+			year=int(dob.split('/')[2])
+		)
 
 	student.name = name
 	student.phone = phone
 	student.home_address = address
-	location.students.append(student) #Add Student to New Location
-	university.students.append(student)
+	student.semester = semester
+	print(is_fulltime)
+	student.is_fulltime = is_fulltime
+	
 	db.session.commit()
 	return jsonify({'status':200, 'message':'Updated Data'})
 
@@ -345,6 +369,34 @@ def update_profile_image(phone):
 		return jsonify({'status':0, 'message':'Could not Upload image to Cloud (500)'})
 	db.session.commit()
 	return jsonify({'status':200, 'message':'Updated Profile Image'})
+
+
+@student.route('/getnotifications/<phone>/<tend>')
+def get_notifications(phone, tend):
+	#TEND: ALl Students who have the same end timing will be notified for pickup
+	student = StudentModel.query.filter_by(phone=phone).first()
+	if(not student): return jsonify({'status':0, 'message':'No Student Found'})
+	notifs = []
+	all_notifications = NotificationModel.query.all()
+	# print(all_notifications)
+	for notification in all_notifications:
+		# print(notification)
+		timings = TimingModel.query.filter_by(end=tend).all()
+		for T in timings:
+			if(student in notification.get_recipients(T)):
+				notifs.append(notification)
+		
+	return jsonify({
+		'status':200,
+		'notifications': [{
+			'driver':{
+				'name': x.driver.name,
+				'phone':x.driver.phone
+			},
+			'message':x.message
+		} for x in notifs]
+	})
+
 
 #+12056352635
 #Twilio://ai.krustel:M@na$2003
