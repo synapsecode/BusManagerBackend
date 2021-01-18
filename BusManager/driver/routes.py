@@ -286,19 +286,19 @@ def update_profile_image(phone):
 	return jsonify({'status':200, 'message':'Updated Profile Image'})
 
 
-@driver.route('/notifyrecipients', methods=['POST'])
-def notify_recipients():
+# @driver.route('/notifyrecipients', methods=['POST'])
+# def notify_recipients():
 	
-	data = request.get_json()
-	phone = data['phone']
-	if(not verify_session_key(request, phone)): return jsonify({'status':0, 'message':'SessionFault'})
-	message = data['message']
-	driver = DriverModel.query.filter_by(phone=phone).first()
-	if(not driver): return jsonify({'status':0, 'message':'No Driver Found'})
-	notification = NotificationModel(driver=driver, message=message)
-	db.session.add(notification)
-	db.session.commit()
-	return jsonify({'status':200, 'message':'OK'})
+# 	data = request.get_json()
+# 	phone = data['phone']
+# 	if(not verify_session_key(request, phone)): return jsonify({'status':0, 'message':'SessionFault'})
+# 	message = data['message']
+# 	driver = DriverModel.query.filter_by(phone=phone).first()
+# 	if(not driver): return jsonify({'status':0, 'message':'No Driver Found'})
+# 	notification = NotificationModel(driver=driver, message=message)
+# 	db.session.add(notification)
+# 	db.session.commit()
+# 	return jsonify({'status':200, 'message':'OK'})
 
 
 # @driver.route('/notifypickup', methods=['POST'])

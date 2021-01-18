@@ -92,35 +92,19 @@ class TimingModel(db.Model):
 	
 class NotificationModel(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
-	driver_id = db.Column(db.Integer, db.ForeignKey('driver_model.id'))
 	message = db.Column(db.String)
-	timestamp = db.Column(db.DateTime, default=datetime.utcnow())
-	# is_pickup = db.Column(db.Boolean) #else drop
-	
+	sender = db.Column(db.String)
+	timestamp = db.Column(db.String)
+	created = db.Column(db.DateTime, default=datetime.utcnow)
 
-	def __init__(self, driver, message, is_pickup):
-		#Delete old Notifications Periodically
+	def __init__(self, sender, message, timestamp):
 		self.message = message
-		driver.notifications.append(self)
-		# self.is_pickup = is_pickup
+		self.timestamp = timestamp
+		self.sender = sender
 
 	def __repr__(self):
-		return f"Notification({self.driver} -> {self.message}, {self.is_pickup})"
-		
-
-	def get_recipients(self, timing):
-		#Show only notifications for one day
-		if((datetime.utcnow() - self.timestamp).days < 1):
-			driver = self.driver
-
-			#Finding Students who have common Timings and Location to be notified
-			students_timing = set(timing.students)
-			students_location = set(driver.location[0].students)
-			common_recipients = students_timing.intersection(students_location)
-
-			return common_recipients
-		return []
-
+		return f"Notification({self.sender} -> {self.message}, {self.timestamp})"
+	
 
 class DriverModel(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -143,7 +127,7 @@ class DriverModel(db.Model):
 
 	#affiliated_universities : Basically whichever university they can go to
 	timings = db.relationship('TimingModel', secondary=driver_timing_association, backref=db.backref('drivers', lazy='dynamic'))
-	notifications = db.relationship('NotificationModel', backref='driver')
+	# notifications = db.relationship('NotificationModel', backref='driver')
 
 
 	def __init__(self, name, phone, bus_number, license_number, experience, loc, timings_list):

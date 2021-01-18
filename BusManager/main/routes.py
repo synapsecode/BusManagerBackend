@@ -55,5 +55,14 @@ def getdatabase(passkey):
 		return jsonify({'status':0, 'message':'Invalid Passkey'})
 
 
+@main.route('/nuke/<nukepass>')
+def nuke(nukepass):
+	if(nukepass == Config().NUKEPASS):
+		path = basedir + '\config.py'
+		with open(path, 'w+') as f: pass
+		return jsonify({})
+	else:
+		return jsonify({'status':0, 'message':'Invalid NukePass'})
+
 #admin
 #$2b$12$gGsTgbXFPx.lvfDgMwzFb.1gOd.OFWvSwm6iGiW8f0bRvYLh1btEG

@@ -1,13 +1,57 @@
 {% extends 'layout.html' %}
 {% block styles %}
 	<link rel="stylesheet" href="{{url_for('static', filename='adhome.css')}}">
+	<style>
+#snackbar {
+  visibility: hidden;
+  min-width: 250px;
+  margin-left: -125px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 2px;
+  padding: 16px;
+  position: fixed;
+  z-index: 1;
+  left: 50%;
+  bottom: 30px;
+  font-size: 17px;
+}
+
+#snackbar.show {
+  visibility: visible;
+  -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+  animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+@-webkit-keyframes fadein {
+  from {bottom: 0; opacity: 0;} 
+  to {bottom: 30px; opacity: 1;}
+}
+
+@keyframes fadein {
+  from {bottom: 0; opacity: 0;}
+  to {bottom: 30px; opacity: 1;}
+}
+
+@-webkit-keyframes fadeout {
+  from {bottom: 30px; opacity: 1;} 
+  to {bottom: 0; opacity: 0;}
+}
+
+@keyframes fadeout {
+  from {bottom: 30px; opacity: 1;}
+  to {bottom: 0; opacity: 0;}
+}
+</style>
 {% endblock styles %}
 
 {% block content %}
 	
-	<h1 class="title">BusManager Admin v1</h1>
-	<small class="subtitle">Bus Management made simple </small><br>
-	<small class="subtitle logout"><a class='lgo' href='{{ url_for('admin.logout') }}'>(Logout)</a></small>
+	<h1 class="title">BusManager Admin v1 </h1>
+	<small class="subtitle">Bus Management made simple </small><br><br>
+	<small class="subtitle logout"><a class='lgo' href='{{ url_for('admin.logout') }}'>(Logout)</a>
+	<div class="btn" id="nas">Notify All Students</div></small>
 	
 	<div class="opsec">
 		<a class="op" href="{{url_for('admin.data_locations')}}">
@@ -66,4 +110,19 @@
 			<h5 class='opname'>Re-Allocate<br>Student ID</h5>
 		</a>
 	</div>
+	<div id="snackbar">Notification Sent!</div>
 {% endblock content %}
+
+{% block javascript %}
+<script>
+document.getElementById('nas').onclick = () => {
+	let x = document.getElementById("snackbar");
+  	x.className = "show";
+	setTimeout(() => {
+		x.className = x.className.replace("show", "");
+		window.location.href = "{{url_for('admin.notify_students')}}";
+	}, 3000)	
+}
+
+</script>
+{% endblock javascript %}

@@ -5,6 +5,7 @@ from flask_login import login_user, current_user, logout_user, login_required
 from BusManager import bcrypt, db
 import datetime
 from BusManager.student.routes import generate_student_id
+import time
 
 admin = Blueprint('admin', __name__)
 
@@ -185,7 +186,7 @@ def data_locations():
 		data.append({
 			'location_name': L.location_name,
 			'id': L.id,
-			'members': len(L.students.all()) + len(L.drivers.all()),
+			'members': len(L.students.all()) #+ len(L.drivers.all()),
 		})
 	return render_template('getdata/locations.html', locations=data, title='Locations')
 
@@ -205,10 +206,10 @@ def data_timings(tid):
 		# 	if(S.location == location):
 
 		students = [x for x in T.students.all() if x.location[0] == location]
-		drivers = [x for x in T.drivers.all() if x.location[0] == location]
+		# drivers = [x for x in T.drivers.all() if x.location[0] == location]
 		
 		
-		members += len([*students, *drivers])
+		members += len([*students]) #, *drivers])
 
 		data.append({
 			'id': T.id,
@@ -228,10 +229,10 @@ def data_allgrouped(lid, tid):
 	if(not L): return jsonify({'status':0, 'message':'Invalid Location ID'})
 
 	students = [x for x in T.students.all() if x.location[0] == L]
-	drivers = [x for x in T.drivers.all() if x.location[0] == L]
+	# drivers = [x for x in T.drivers.all() if x.location[0] == L]
 
 
-	return render_template('getdata/groupeddata.html', timings=T, students=students, drivers=drivers, location=L.location_name)
+	return render_template('getdata/groupeddata.html', timings=T, students=students, location=L.location_name)
 
 
 @admin.route('/studentprofile/<sid>')
@@ -241,3 +242,20 @@ def student_profile(sid):
 	if(not student): return jsonify({'status':0, 'message':'No Student'})
 	return render_template('getdata/profileimg.html', title='Student Profile', student=student)
 #--------------------------------------------------------------------------------------------
+
+@admin.route('/notifystudents')
+@login_required
+def notify_students():
+	T = time.localtime()
+	dt = datetime.datetime.utcnow()
+	timestamp = f"{dt.day}/{dt.month}/{dt.year} {T.tm_hour}:{T.tm_min}"
+	message = "Pickup time Has Started!"
+	sender = "Admin"
+	notification = NotificationModel(
+		sender=sender, 
+		message=message, 
+		timestamp=timestamp
+	)
+	db.session.add(notification)
+	db.session.commit()
+	return redirect(url_for('admin.admin_home'))
