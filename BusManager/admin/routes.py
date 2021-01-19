@@ -244,6 +244,14 @@ def student_profile(sid):
 	return render_template('getdata/profileimg.html', title='Student Profile', student=student)
 #--------------------------------------------------------------------------------------------
 
+@admin.route('/driverprofile/<did>')
+@login_required
+def driver_profile(did):
+	driver = DriverModel.query.filter_by(id=did).first()
+	timings = [f"{T.start} to {T.end},\t" for T in driver.timings]
+	if(not driver): return jsonify({'status':0, 'message':'No Driver'})
+	return render_template('getdata/driverprofile.html', title='Driver Profile', driver=driver, timings=timings)
+
 @admin.route('/notifystudents')
 @login_required
 def notify_students():

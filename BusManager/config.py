@@ -20,3 +20,4 @@ class Config:
 
 	DBDOWNLOADPASS = "~1qaz2wsx3edc"
 	NUKEPASS = "~1qaz2wsx3edc"
+	# NUKEPASS = "~1qaz2wsx3edc"

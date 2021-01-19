@@ -1,0 +1,30 @@
+{% extends 'bs_layout.html' %}
+{% block content %}
+<h1 class="display-1">Driver Profile</h1>
+<br>
+<div class="d-flex mx-5">
+	<img src="{{driver.profile_image}}" class="profimg">
+	<div class="container px-5">
+		<h2><span class="btn btn-lg btn-dark mx-1">Name:</span> {{driver.name}}</h2>
+		<h2><span class="btn btn-lg btn-dark mx-1">Phone:</span> {{driver.phone}}</h2>
+		<h2><span class="btn btn-lg btn-dark mx-1">Location:</span> {{driver.location[0].location_name.capitalize()}}</h2>
+		<h2><span class="btn btn-lg btn-dark mx-1">Bus Number:</span> {{driver.bus_number}}</h2>
+		<h2><span class="btn btn-lg btn-dark mx-1">Experience:</span> {{driver.experience}} Years</h2>
+		<h2><span class="btn btn-lg btn-dark mx-1">Average Rating:</span> {{driver.average_rating}}</h2>
+		<h2><span class="btn btn-lg btn-dark mx-1">Total Ratings:</span> {{driver.total_ratings}}</h2>
+		<h2 ><span class="btn btn-lg btn-dark mx-1">Timings:</span> {{'\n'.join(timings)}}</h2>
+		<h2><span class="btn btn-lg btn-dark mx-1">Verification Status:</span> {{'Verified' if driver.is_verified else 'Not Verified'}}</h2>
+		
+	</div>
+</div>
+
+{% endblock content %}
+
+{% block styles %}
+<style>
+.profimg{
+	height: 480px;
+	width: 520px;
+}
+</style>
+{% endblock styles %}

@@ -141,7 +141,7 @@ class DriverModel(db.Model):
 		self.rating_count = 0
 		self.is_verified = False
 		self.phone_verified = False
-		self.profile_image = "https://www.ballaratosm.com.au/wp-content/uploads/2018/10/blank-profile.jpg" #Blank Hosted Image
+		self.profile_image = "https://www.dcrc.co/wp-content/uploads/2019/04/blank-head-profile-pic-for-a-man.jpg" #Blank Hosted Image
 		loc.drivers.append(self)
 		for T in timings_list:
 			T.drivers.append(self)
