@@ -1,5 +1,6 @@
 from flask import current_app, config
 from BusManager.config import Config
+# from run import sched
 import random
 import time
 import io
@@ -7,8 +8,14 @@ import os
 from cloudinary.uploader import upload
 from cloudinary.utils import cloudinary_url
 import time
-from BusManager.models import SessionModel, OTPModel
-from BusManager import db
+from BusManager.models import NotificationModel, OTPModel, SessionModel
+from BusManager import create_app, db
+import datetime
+
+from apscheduler.schedulers.background import BackgroundScheduler
+sched = BackgroundScheduler()
+sched.start()
+# from BusManager.admin.routes import delete_old_notificiations
 
 #For Authentication Purposes, After login, the user recieves back a session key.
 #This function verifies the session ID.
@@ -112,3 +119,76 @@ def verify_otp(phone, otp):
 	db.session.delete(O)
 	db.session.commit()
 	return ret	
+
+def timeago(sec):
+	tx = str(datetime.timedelta(seconds=sec)).split(":")
+	hours = int(tx[0])
+	minutes = int(tx[1])
+	if(minutes == 0):
+		return "now"
+	return f"""{f"{hours} hour{'s' if hours>1 else ''} " if hours != 0 else ''}{minutes} minute{'s' if minutes>1 else ''} ago"""
+
+def delete_old_notificiations(cTimestamp):
+	#------------------------DELETE OLD NOTIFICATIONS----------------------
+	#Get all notifications
+	all_notifs = NotificationModel.query.all()
+	#Todays notifs
+	cond = NotificationModel.timestamp.startswith(cTimestamp.split(" ")[0])
+	todays_notifs = NotificationModel.query.filter(cond).all()
+
+	if(len(all_notifs) > len(todays_notifs)):
+		#old notifs
+		old_notifs = list(set(all_notifs) - set(todays_notifs))
+		[db.session.delete(N) for N in old_notifs]
+		db.session.commit()
+	#------------------------DELETE OLD NOTIFICATIONS----------------------
+
+
+notif_count = 0
+def AutomatedNotificationSender():
+	ac = create_app().app_context()
+	INTERVAL = 1200
+	LIMIT = 3
+	global notif_count
+	
+	def kill():
+		sched.remove_job('autonotif')
+		notif_count = 0 #Reset
+		print("Done Sending Automated Notifications")
+
+	def work():
+		global notif_count
+		if(notif_count > LIMIT):
+			kill()
+			return
+		else: notif_count += 1
+
+		#Do Work
+		with ac:
+			T = time.localtime()
+			dt = datetime.datetime.utcnow()
+			timestamp = f"{dt.day}/{dt.month}/{dt.year} {T.tm_hour}:{T.tm_min}"
+			message = "Reminder: Pickup time Has Started!"
+			sender = "AutomatedReminder"
+
+			delete_old_notificiations(timestamp)
+
+			notification = NotificationModel(
+				sender=sender, 
+				message=message, 
+				timestamp=timestamp
+			)
+			db.session.add(notification)
+			db.session.commit()
+		print("Created Notification", notif_count)
+		
+
+	#Prevent Multiple Calls
+	with ac:
+		if(len(sched.get_jobs()) == 0):
+			notif_count = 0
+			sched.add_job(work, 'interval', seconds=INTERVAL, id='autonotif')
+			return 200
+		else:
+			print("Automated Batch Already Running")
+			return 42

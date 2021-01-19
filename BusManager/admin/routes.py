@@ -6,6 +6,7 @@ from BusManager import bcrypt, db
 import datetime
 from BusManager.student.routes import generate_student_id
 import time
+from BusManager.main.utils import AutomatedNotificationSender, delete_old_notificiations
 
 admin = Blueprint('admin', __name__)
 
@@ -251,6 +252,9 @@ def notify_students():
 	timestamp = f"{dt.day}/{dt.month}/{dt.year} {T.tm_hour}:{T.tm_min}"
 	message = "Pickup time Has Started!"
 	sender = "Admin"
+
+	delete_old_notificiations(timestamp)
+
 	notification = NotificationModel(
 		sender=sender, 
 		message=message, 
@@ -258,4 +262,6 @@ def notify_students():
 	)
 	db.session.add(notification)
 	db.session.commit()
+	#Keeps sending the Messages repeatedly in 20 minute intervals, 4 times
+	AutomatedNotificationSender()
 	return redirect(url_for('admin.admin_home'))

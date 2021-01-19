@@ -29,7 +29,7 @@ from BusManager.main.utils import generate_session_id, send_otp, send_sms, verif
 import random
 import datetime
 import io
-from BusManager.main.utils import upload_file_to_cloud
+from BusManager.main.utils import timeago, upload_file_to_cloud
 
 def generate_student_id(l):
 	cset = [*[str(i) for i in range(0,10)],*[chr(x) for x in range(65,91)], *[chr(x) for x in range(97,123)]]
@@ -208,6 +208,14 @@ def getbuses(phone_number):
 	return jsonify({'status': 0, 'message': 'Student Does not Exist'})
 
 
+"""
+Status Codes:
+0 -> HardServerError
+1 -> Lapsed
+2 -> NotPaid
+3 -> 30DaysUp
+
+"""
 @student.route('/checkpaymentstatus/<number>')
 def checkpaymentstatus(number):
 	if(not verify_session_key(request, number)): return jsonify({'status':0, 'message':'SessionFault'})
@@ -216,9 +224,9 @@ def checkpaymentstatus(number):
 
 	#Check if 6 months lapsed
 	if(student.is_lapsed):
-		return jsonify({'status': 6, 'message':'6 Months Completed. StudentID Must be renewed', 'isPaid':False})
+		return jsonify({'status': 1, 'message':'Account Expired', 'isPaid':False})
 	
-	if(not student.is_paid): return jsonify({'status': 200, 'message':'Payment Not Done', 'isPaid':False})
+	if(not student.is_paid): return jsonify({'status': 3, 'message':'Payment Not Done', 'isPaid':False})
 
 	
 
@@ -371,31 +379,45 @@ def update_profile_image(phone):
 	return jsonify({'status':200, 'message':'Updated Profile Image'})
 
 
-@student.route('/getnotifications/<phone>/<tend>')
-def get_notifications(phone, tend):
-	#TEND: ALl Students who have the same end timing will be notified for pickup
-	student = StudentModel.query.filter_by(phone=phone).first()
-	if(not student): return jsonify({'status':0, 'message':'No Student Found'})
-	notifs = []
-	all_notifications = NotificationModel.query.all()
-	# print(all_notifications)
-	for notification in all_notifications:
-		# print(notification)
-		timings = TimingModel.query.filter_by(end=tend).all()
-		for T in timings:
-			if(student in notification.get_recipients(T)):
-				notifs.append(notification)
-		
+@student.route('/getnotifications')
+def getnotifications():
+	notifs = NotificationModel.query.order_by(NotificationModel.id.desc()).all()
 	return jsonify({
-		'status':200,
-		'notifications': [{
-			'driver':{
-				'name': x.driver.name,
-				'phone':x.driver.phone
-			},
-			'message':x.message
-		} for x in notifs]
+		'status':'200',
+		'notifications': [
+			{
+				'message':N.message,
+				'timeago': timeago((datetime.datetime.utcnow() - N.created).seconds),
+				'sender': N.sender,
+			} for N in notifs
+		]
 	})
+
+# @student.route('/getnotifications/<phone>/<tend>')
+# def get_notifications(phone, tend):
+# 	#TEND: ALl Students who have the same end timing will be notified for pickup
+# 	student = StudentModel.query.filter_by(phone=phone).first()
+# 	if(not student): return jsonify({'status':0, 'message':'No Student Found'})
+# 	notifs = []
+# 	all_notifications = NotificationModel.query.all()
+# 	# print(all_notifications)
+# 	for notification in all_notifications:
+# 		# print(notification)
+# 		timings = TimingModel.query.filter_by(end=tend).all()
+# 		for T in timings:
+# 			if(student in notification.get_recipients(T)):
+# 				notifs.append(notification)
+		
+# 	return jsonify({
+# 		'status':200,
+# 		'notifications': [{
+# 			'driver':{
+# 				'name': x.driver.name,
+# 				'phone':x.driver.phone
+# 			},
+# 			'message':x.message
+# 		} for x in notifs]
+# 	})
 
 
 #+12056352635

@@ -1,6 +1,7 @@
 from BusManager import create_app
 from BusManager.config import Config
-
+# sched = BackgroundScheduler()
+# sched.start() #Starting APScheduler
 app = create_app()
 
 #!HOST USING TORNADO SEERVER OR SOMETHING IN PRODUCTION	
