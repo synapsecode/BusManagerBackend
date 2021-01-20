@@ -66,6 +66,14 @@ def upload_file_to_cloud(filebytes, filetype=None):
 			"ERRCODE": str(e)
 		})
 
+def send_nexmo_sms(msg, phone):
+	import nexmo
+	client = nexmo.Client(key='92efcb6b', secret='cQ1aHUFDjTbz1kzE')
+	client.send_message({
+		'from': 'BusManager',
+		'to': phone,
+		'text': msg,
+	})
 
 
 def generate_session_id():
