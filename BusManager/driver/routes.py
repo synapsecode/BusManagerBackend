@@ -293,6 +293,14 @@ def update_profile_image(phone):
 	return jsonify({'status':200, 'message':'Updated Profile Image'})
 
 
+@driver.route('/checkverificationstatus/<number>')
+def checkverificationstatus(number):
+	if(not verify_session_key(request, number)): return jsonify({'status':0, 'message':'SessionFault'})
+	driver = DriverModel.query.filter_by(phone=number).first()
+	if(not driver): return jsonify({'status':0, 'message':'No Driver Found with that Phone Number'})
+
+	return jsonify({'status': 200, 'message':'OK', 'isVerified':driver.is_verified})
+
 # @driver.route('/notifyrecipients', methods=['POST'])
 # def notify_recipients():
 	

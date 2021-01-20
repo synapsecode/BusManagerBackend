@@ -273,3 +273,42 @@ def notify_students():
 	#Keeps sending the Messages repeatedly in 20 minute intervals, 4 times
 	AutomatedNotificationSender()
 	return redirect(url_for('admin.admin_home'))
+
+
+
+@admin.route('/add_data')
+@login_required
+def add_data():
+	locations = LocationModel.query.all()
+	universities = UniversityModel.query.all()
+	return render_template('add_data.html', title='Add Data', locations=locations, universities=universities)
+
+
+@admin.route('/add_data_actions/<action>/<id>', methods=['GET', 'POST'])
+@login_required
+def add_data_actions(action, id):
+	if(request.method == 'POST'):
+		data = request.form
+		if(action == 'LOCADD'):
+			loc = LocationModel(location_name=data['location_name'].lower())
+			db.session.add(loc)
+			db.session.commit()
+		if(action == 'UNIADD'):
+			uni = UniversityModel(name=data['uni_name'].lower(), address=data['uni_addr'].lower())
+			db.session.add(uni)
+			db.session.commit()
+		return redirect(url_for('admin.add_data'))
+
+	if(action == 'LOCDEL'):
+		loc = LocationModel.query.filter_by(id=id).first()
+		if(not loc): return "NO SUCH LOCATION"
+		loc.students = []
+		loc.drivers = []
+		db.session.delete(loc)
+		db.session.commit()
+	elif(action == 'UNIDEL'):
+		uni = UniversityModel.query.filter_by(id=id).first()
+		if(not uni): return "NO SUCH UNIVERSITY"
+		db.session.delete(uni)
+		db.session.commit()
+	return redirect(url_for('admin.add_data'))
