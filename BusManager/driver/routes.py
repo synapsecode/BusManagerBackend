@@ -164,19 +164,26 @@ def allow_student():
 	license_number = data['license_number']
 	student = StudentModel.query.filter_by(student_id=sid).first()
 	driver = DriverModel.query.filter_by(license_number=license_number).first()
-	if(not verify_session_key(request, driver.phone)): return jsonify({'status':0, 'message':'SessionFault'})
+	if(not verify_session_key(request, driver.phone)):
+		print("session fault")
+		return jsonify({'status':0, 'message':'SessionFault'})
 	if(not driver):
+		print("LicenseFault")
 		return jsonify({'status':0, 'message':'Invalid License Number'})
 	if(not student):
+		print("Student IDFault")
 		return jsonify({'status':0, 'message':'Invalid Student Phone Number'})
 	if(not student.is_paid):
+		print("Student Not Paid")
 		return jsonify({'status':0, 'message':'Student Has not Paid'})
 	# print(f"DriverLocation: {driver.location}    ---->   StudentLocation: {student.location}")
 	if(not student.location == driver.location):
+		print("Locations dont match")
 		return jsonify({'status':0, 'message': 'Locations do not match'})
 	journey = JourneyModel(driver=driver, student=student)
 	db.session.add(journey)
 	db.session.commit()
+	print("Allowed")
 	return jsonify({'status':200, 'message':'OK'})
 
 @driver.route("/add_rating", methods=['POST'])
