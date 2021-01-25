@@ -12,10 +12,11 @@ class Config:
 	TWILIO_ACCOUNT_SID = 'AC3fa45717b2f301de424eb588892047d7'
 	TWILIO_AUTH_TOKEN = 'f163cc27352e8bb99d01c8d02cbd43c7'
 
+	#Ismail's Cloudinary Data
 	CLOUDINARY_CONFIG = {
-		"api_key": "597356837268799",
-		"api_secret": "MgLEKQS1aHJs6TVkGNrv-mfneY0",
-		"cloud_name": "krustel-inc"
+		"api_key": "766698321853973",
+		"api_secret": "oDWtlmsEzGf1K2P_2z736DithSw",
+		"cloud_name": "dveimvku4"
 	}
 
 	DBDOWNLOADPASS = "~1qaz2wsx3edc"
