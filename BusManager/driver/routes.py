@@ -73,8 +73,7 @@ def driver_register():
 	db.session.commit()
 
 	#Send the OTP Immediately after Registration
-	# send_otp(phone)
-	send_otp('+918904995101')
+	send_otp(phone)
 
 	return jsonify({
 		'status': 200,
@@ -94,15 +93,12 @@ def getdriver(phone):
 
 @driver.route("/resend_otp/<phone>")
 def resend_otp(phone):
-	#send_otp(phone)
-	send_otp('+918904995101')
+	send_otp(phone)
 	return jsonify({'status':200, 'message':'OK'})
 
 @driver.route("/verifyphone/<phone>/<otp>")
 def verify_driver_otp(phone, otp):
-	# sender_phone = phone
-	sender_phone = "+918904995101"
-	is_correct = verify_otp(sender_phone, otp)
+	is_correct = verify_otp(phone, otp)
 	if(is_correct):
 		driver = DriverModel.query.filter_by(phone=phone).first()
 		if(not driver): return jsonify({'status':0, 'message':'No Driver with that Phone Number'})
@@ -125,11 +121,10 @@ def verify_driver_otp(phone, otp):
 
 @driver.route("/login/<phone>", methods=['GET', 'POST'])
 def login_driver(phone):
-	pn = '+918904995101'
 	if(request.method == 'POST'):
 		data = request.get_json()
 		otp = data['otp']
-		is_correct = verify_otp(pn, otp)
+		is_correct = verify_otp(phone, otp)
 		if(is_correct):
 			sessionkey = generate_session_id()
 			s = SessionModel.query.filter_by(phone=phone).first()
@@ -144,8 +139,7 @@ def login_driver(phone):
 	#On Get request, send OTP to number
 	driver = DriverModel.query.filter_by(phone=phone).first()
 	if(not driver): return jsonify({'status':0, 'message':'No Driver With that Number'})
-	send_otp(pn)
-	# send_otp(pn)
+	send_otp(phone)
 	return jsonify({'status':200, 'message':'OK'})
 
 @driver.route('/logout/<phone>')
@@ -155,7 +149,6 @@ def logout_driver(phone):
 	db.session.delete(S)
 	db.session.commit()
 	return jsonify({'status':200, 'message':'OK'})
-
 
 @driver.route("/allow_student", methods=['POST'])
 def allow_student():
@@ -230,8 +223,9 @@ def edit_profile():
 
 
 	#If such sensitive information changes, Driver must be reverified
-	if(phone != driver.phone or data['bus_number'] != driver.bus_number or data['license_number'] != driver.license_number):
-		driver.is_verified = False
+	#REMOVED UNDER SPECIFIC REQUEST BY ISMAIL
+	# if(phone != driver.phone or data['bus_number'] != driver.bus_number or data['license_number'] != driver.license_number):
+	# 	driver.is_verified = False
 
 	if(phone != driver.phone):
 		#Number Changed -> Verify Number
@@ -241,9 +235,7 @@ def edit_profile():
 		if(S):
 			S.phone = phone
 			db.session.commit()
-		send_otp('+918904995101')
-		# send_otp(phone)
-		#On app, show the Verify OTP Screen and send get request to /verifyphone
+		send_otp(phone)
 
 	if(timings and timings != []):
 		timings = list(timings)
@@ -300,59 +292,3 @@ def checkverificationstatus(number):
 	if(not driver): return jsonify({'status':0, 'message':'No Driver Found with that Phone Number'})
 
 	return jsonify({'status': 200, 'message':'OK', 'isVerified':driver.is_verified})
-
-# @driver.route('/notifyrecipients', methods=['POST'])
-# def notify_recipients():
-	
-# 	data = request.get_json()
-# 	phone = data['phone']
-# 	if(not verify_session_key(request, phone)): return jsonify({'status':0, 'message':'SessionFault'})
-# 	message = data['message']
-# 	driver = DriverModel.query.filter_by(phone=phone).first()
-# 	if(not driver): return jsonify({'status':0, 'message':'No Driver Found'})
-# 	notification = NotificationModel(driver=driver, message=message)
-# 	db.session.add(notification)
-# 	db.session.commit()
-# 	return jsonify({'status':200, 'message':'OK'})
-
-
-# @driver.route('/notifypickup', methods=['POST'])
-# def notify_pickup():
-# 	data = request.get_json()
-# 	phone = data['phone']
-# 	message = data['message']
-# 	start_time = data['start_time']
-# 	driver = DriverModel.query.filter_by(phone=phone).first()
-# 	if(not driver): return jsonify({'status':0, 'message':'No Driver Found'})
-# 	notification = NotificationModel(
-# 		driver=driver,
-# 		message=message,
-# 		is_pickup=True,
-# 		time=start_time
-# 	)
-# 	db.session.add(notification)
-# 	db.session.commit()
-# 	return jsonify({'status':200, 'message':'OK'})
-
-# @driver.route('/notifydrop', methods=['POST'])
-# def notify_drop():
-# 	data = request.get_json()
-# 	phone = data['phone']
-# 	message = data['message']
-# 	start_time = data['start_time']
-# 	driver = DriverModel.query.filter_by(phone=phone).first()
-# 	if(not driver): return jsonify({'status':0, 'message':'No Driver Found'})
-# 	notification = NotificationModel(
-# 		driver=driver,
-# 		message=message,
-# 		is_pickup=True,
-# 		time=start_time
-# 	)
-# 	db.session.add(notification)
-# 	db.session.commit()
-# 	return jsonify({'status':200, 'message':'OK'})
-#"rkgzK0cvlV6RvwMa"
-#16BuKquPxOfBcpYg
-
-#Student
-#aoff3cWokVYSiGua

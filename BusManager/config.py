@@ -22,3 +22,9 @@ class Config:
 	DBDOWNLOADPASS = "~1qaz2wsx3edc"
 	NUKEPASS = "~1qaz2wsx3edc"
 	# NUKEPASS = "~1qaz2wsx3edc"
+
+#------------------------SECRETS------------------
+#+12056352635
+#Twilio://ai.krustel:M@na$2003
+#admin
+#$2b$12$gGsTgbXFPx.lvfDgMwzFb.1gOd.OFWvSwm6iGiW8f0bRvYLh1btEG

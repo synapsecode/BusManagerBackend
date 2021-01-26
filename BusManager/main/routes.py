@@ -63,6 +63,3 @@ def nuke(nukepass):
 		return jsonify({})
 	else:
 		return jsonify({'status':0, 'message':'Invalid NukePass'})
-
-#admin
-#$2b$12$gGsTgbXFPx.lvfDgMwzFb.1gOd.OFWvSwm6iGiW8f0bRvYLh1btEG

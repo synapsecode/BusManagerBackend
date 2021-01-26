@@ -32,8 +32,15 @@ import io
 from BusManager.main.utils import timeago, upload_file_to_cloud
 
 def generate_student_id(l):
-	cset = [*[str(i) for i in range(0,10)],*[chr(x) for x in range(65,91)], *[chr(x) for x in range(97,123)]]
-	sid = ''.join([random.choice(cset) for _ in range(l)])
+	# cset = [*[str(i) for i in range(0,10)],*[chr(x) for x in range(65,91)], *[chr(x) for x in range(97,123)]]
+	# sid = ''.join([random.choice(cset) for _ in range(l)])
+	sid = random.randint(100000, 999999)
+	print("Generated SID")
+	student = StudentModel.query.filter_by(student_id=sid).first()
+	while(student):
+		print("SID Exists Retrying")
+		sid = random.randint(100000, 999999)
+		student = StudentModel.query.filter_by(student_id=sid).first()
 	return sid
 
 student = Blueprint('student', __name__)
@@ -68,9 +75,7 @@ def register_number():
 		db.session.commit()
 
 	sid = generate_student_id(6)
-	# print(sid)
-	if(StudentModel.query.filter_by(student_id=sid).first()):
-		sid = sid[:2] + name[:2] + str(phone)[:2] #Custom Student ID if Clash Occurs
+	print("New Generated SID:", sid)
 
 	student = StudentModel(
 		name=name,
@@ -81,8 +86,7 @@ def register_number():
 		loc=loc,
 	)
 
-	#send_otp(phone)
-	send_otp('+918904995101')
+	send_otp(phone)
 	db.session.add(student)
 	db.session.commit()
 
@@ -130,15 +134,12 @@ def getstudent(phone):
 
 @student.route("/resend_otp/<phone>")
 def resend_otp(phone):
-	#send_otp(phone)
-	send_otp('+918904995101')
+	send_otp(phone)
 	return jsonify({'status':200, 'message':'OK'})
 
 @student.route("/verifyphone/<phone>/<otp>")
 def verify_student_otp(phone, otp):
-	# sender_phone = phone
-	sender_phone = "+918904995101"
-	is_correct = verify_otp(sender_phone, otp)
+	is_correct = verify_otp(phone, otp)
 	if(is_correct):
 		student = StudentModel.query.filter_by(phone=phone).first()
 		if(not student): return jsonify({'status':0, 'message':'No student with that Phone Number'})
@@ -158,11 +159,10 @@ def verify_student_otp(phone, otp):
 
 @student.route("/login/<phone>", methods=['GET', 'POST'])
 def login_student(phone):
-	sender_phone = "+918904995101" #phone
 	if(request.method == 'POST'):
 		data = request.get_json()
 		otp = data['otp']
-		is_correct = verify_otp(sender_phone, otp)
+		is_correct = verify_otp(phone, otp)
 		if(is_correct):
 			sessionkey = generate_session_id()
 			s = SessionModel.query.filter_by(phone=phone).first()
@@ -177,8 +177,7 @@ def login_student(phone):
 	#On Get request, send OTP to number
 	student = StudentModel.query.filter_by(phone=phone).first()
 	if(not student): return jsonify({'status':0, 'message':'No Student With that Number'})
-	send_otp('+918904995101')
-	#send_otp(phone)
+	send_otp(phone)
 	return jsonify({'status':200, 'message':'OK'})
 
 @student.route('/logout/<phone>')
@@ -196,10 +195,7 @@ def getbuses(phone_number):
 	student = StudentModel.query.filter_by(phone=phone_number).first()
 	if(student):
 		s_loc = student.location[0]
-		# print(s_loc)
 		available_drivers = s_loc.drivers.all()
-		# student_timings = student.timings[0]
-		# available_drivers = [d for d in available_drivers if(student_timings in d.timings)]
 		return jsonify({
 				'status': 200,
 				'message':'OK',
@@ -227,8 +223,6 @@ def checkpaymentstatus(number):
 		return jsonify({'status': 1, 'message':'Account Expired', 'isPaid':False})
 	
 	if(not student.is_paid): return jsonify({'status': 3, 'message':'Payment Not Done', 'isPaid':False})
-
-	
 
 	#Checking if Payment OverDue
 	if((datetime.datetime.utcnow() - student.utc_last_paid).days > 30):
@@ -293,9 +287,6 @@ def edit_profile():
 
 	location.students.append(student) #Add Student to New Location
 	university.students.append(student)
-	
-
-	#! If Phone number changes, send OTP and Perform Reverification
 
 	if(phone != student.phone):
 		#Number Changed -> Verify Number
@@ -305,8 +296,7 @@ def edit_profile():
 		#Update the Session
 		S.phone = phone
 		db.session.commit()
-		# send_otp(phone)
-		send_otp('+918904995101')
+		send_otp(phone)
 		#On app, show the Verify OTP Screen and send get request to /verifyphone
 
 	if(timings != []):
@@ -338,7 +328,6 @@ def edit_profile():
 	student.phone = phone
 	student.home_address = address
 	student.semester = semester
-	print(is_fulltime)
 	student.is_fulltime = is_fulltime
 	
 	db.session.commit()
@@ -392,33 +381,3 @@ def getnotifications():
 			} for N in notifs
 		]
 	})
-
-# @student.route('/getnotifications/<phone>/<tend>')
-# def get_notifications(phone, tend):
-# 	#TEND: ALl Students who have the same end timing will be notified for pickup
-# 	student = StudentModel.query.filter_by(phone=phone).first()
-# 	if(not student): return jsonify({'status':0, 'message':'No Student Found'})
-# 	notifs = []
-# 	all_notifications = NotificationModel.query.all()
-# 	# print(all_notifications)
-# 	for notification in all_notifications:
-# 		# print(notification)
-# 		timings = TimingModel.query.filter_by(end=tend).all()
-# 		for T in timings:
-# 			if(student in notification.get_recipients(T)):
-# 				notifs.append(notification)
-		
-# 	return jsonify({
-# 		'status':200,
-# 		'notifications': [{
-# 			'driver':{
-# 				'name': x.driver.name,
-# 				'phone':x.driver.phone
-# 			},
-# 			'message':x.message
-# 		} for x in notifs]
-# 	})
-
-
-#+12056352635
-#Twilio://ai.krustel:M@na$2003

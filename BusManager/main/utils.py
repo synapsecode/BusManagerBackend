@@ -98,6 +98,9 @@ def otp_generator():
 	return random.randint(1000,9999)
 
 def send_otp(phone):
+	#Default: Remove this in production
+	if(phone != '+918904995101'): phone = '+918904995101'
+
 	otp = otp_generator()
 	print(f"OTP -> {otp}")
 	T = int(time.time())
@@ -113,6 +116,9 @@ def send_otp(phone):
 
 #?Essentially We use OTP To verify number
 def verify_otp(phone, otp):
+	#Default: Remove this in production
+	if(phone != '+918904995101'): phone = '+918904995101'
+
 	TIMEOUT = 75
 	ct = int(time.time())
 	O = OTPModel.query.filter_by(phone=phone).first()
@@ -152,10 +158,11 @@ def delete_old_notificiations(cTimestamp):
 	#------------------------DELETE OLD NOTIFICATIONS----------------------
 
 
+#This function automatically sends(Saves) Notifications to the DB
 notif_count = 0
 def AutomatedNotificationSender():
 	ac = create_app().app_context()
-	INTERVAL = 1200
+	INTERVAL = 1200 #20 Minutes
 	LIMIT = 3
 	global notif_count
 	
