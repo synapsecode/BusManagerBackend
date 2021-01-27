@@ -12,6 +12,10 @@ class Config:
 	TWILIO_ACCOUNT_SID = 'AC3fa45717b2f301de424eb588892047d7'
 	TWILIO_AUTH_TOKEN = 'f163cc27352e8bb99d01c8d02cbd43c7'
 
+	#Somalian SMS Provider
+	HORMUUD_USERAME = ""
+	HORMUUD_PASSWORD = ""
+
 	#Ismail's Cloudinary Data
 	CLOUDINARY_CONFIG = {
 		"api_key": "766698321853973",

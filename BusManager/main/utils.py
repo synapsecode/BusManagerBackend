@@ -11,6 +11,8 @@ import time
 from BusManager.models import NotificationModel, OTPModel, SessionModel
 from BusManager import create_app, db
 import datetime
+import requests
+import json
 
 from apscheduler.schedulers.background import BackgroundScheduler
 sched = BackgroundScheduler()
@@ -66,14 +68,14 @@ def upload_file_to_cloud(filebytes, filetype=None):
 			"ERRCODE": str(e)
 		})
 
-def send_nexmo_sms(msg, phone):
-	import nexmo
-	client = nexmo.Client(key='92efcb6b', secret='cQ1aHUFDjTbz1kzE')
-	client.send_message({
-		'from': 'BusManager',
-		'to': phone,
-		'text': msg,
-	})
+# def send_nexmo_sms(msg, phone):
+# 	import nexmo
+# 	client = nexmo.Client(key='92efcb6b', secret='cQ1aHUFDjTbz1kzE')
+# 	client.send_message({
+# 		'from': 'BusManager',
+# 		'to': phone,
+# 		'text': msg,
+# 	})
 
 
 def generate_session_id():
@@ -92,6 +94,36 @@ def send_sms(msg, phone):
 	client = Client(account_sid, auth_token)
 	message = client.messages.create(body=msg, from_='+12056352635', to=phone)
 	print(message.sid)
+
+def send_hormuud_sms(msg, phone):
+	cfg = Config()
+	#---------------Getting Access Tokens---------------------
+	auth_payload = f"grant_type=password&username={cfg.HORMUUD_USERNAME}&password=${cfg.HORMUUD_PASSWORD}"
+	auth_response = requests.request(
+		'POST',
+		'https://smsapi.hormuud.com/token',
+		data = auth_payload,
+		headers = {'content-type': "application/x-www-form-urlencoded"},
+	)
+	auth_response = json.loads(auth_response.text)
+	print("Recieved AUTHRES:", auth_response)
+	access_token = auth_response['access_token']
+
+	#---------------Send SMS----------------------
+
+	sms_payload = {
+		"senderid":"BusManagerService",
+		"mobile": phone,
+		"message": msg
+	}
+	sms_response = requests.request(
+		'POST',
+		'https://smsapi.hormuud.com/api/SendSMS',
+		data=json.dumps(sms_payload),
+		headers={'Content-Type':'application/json', 'Authorization': 'Bearer ' + access_token},
+	)
+	sms_response = json.loads(sms_response.text)
+	print("Recieved SMSRES:", sms_response)
 
 def otp_generator():
 	import random
@@ -112,7 +144,10 @@ def send_otp(phone):
 		O = OTPModel(phone=phone, otp=otp, timestamp=T)
 		db.session.add(O)
 	db.session.commit()
+	
 	send_sms(otp, phone) #Send the Message
+	#send_hormuud_sms(otp, phone)
+	
 
 #?Essentially We use OTP To verify number
 def verify_otp(phone, otp):
