@@ -85,7 +85,7 @@ def generate_session_id():
 
 otpstorage = {}
 
-def send_sms(msg, phone):
+def send_twilio_sms(msg, phone):
 	cfg = Config()
 	from twilio.rest import Client
 	import os
@@ -93,7 +93,11 @@ def send_sms(msg, phone):
 	auth_token = cfg.TWILIO_AUTH_TOKEN	
 	client = Client(account_sid, auth_token)
 	message = client.messages.create(body=msg, from_='+12056352635', to=phone)
-	print(message.sid)
+	return message.sid
+
+def send_sms(msg, phone):
+	print(send_twilio_sms(msg, phone))
+	# print(send_hormuud_sms(msg, phone))
 
 def send_hormuud_sms(msg, phone):
 	cfg = Config()
@@ -123,14 +127,14 @@ def send_hormuud_sms(msg, phone):
 		headers={'Content-Type':'application/json', 'Authorization': 'Bearer ' + access_token},
 	)
 	sms_response = json.loads(sms_response.text)
-	print("Recieved SMSRES:", sms_response)
+	return sms_response
 
 def otp_generator():
 	import random
 	return random.randint(1000,9999)
 
 def send_otp(phone):
-	#Default: Remove this in production
+	#?Default: Remove this in production
 	if(phone != '+918904995101'): phone = '+918904995101'
 
 	otp = otp_generator()
@@ -177,12 +181,17 @@ def timeago(sec):
 		return "now"
 	return f"""{f"{hours} hour{'s' if hours>1 else ''} " if hours != 0 else ''}{minutes} minute{'s' if minutes>1 else ''} ago"""
 
-def delete_old_notificiations(cTimestamp):
+def delete_old_notificiations():
+	#!Moved Timestamp Data
+	#!Recently changed
+	dt = datetime.datetime.utcnow()
+	timestamp = f"{dt.day}/{dt.month}/{dt.year}"
+
 	#------------------------DELETE OLD NOTIFICATIONS----------------------
 	#Get all notifications
 	all_notifs = NotificationModel.query.all()
 	#Todays notifs
-	cond = NotificationModel.timestamp.startswith(cTimestamp.split(" ")[0])
+	cond = NotificationModel.timestamp.startswith(timestamp.split(" ")[0])
 	todays_notifs = NotificationModel.query.filter(cond).all()
 
 	if(len(all_notifs) > len(todays_notifs)):
@@ -198,7 +207,7 @@ notif_count = 0
 def AutomatedNotificationSender():
 	ac = create_app().app_context()
 	INTERVAL = 1200 #20 Minutes
-	LIMIT = 3
+	LIMIT = 3 #Runs 4 Times
 	global notif_count
 	
 	def kill():

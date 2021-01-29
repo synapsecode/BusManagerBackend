@@ -10,23 +10,20 @@ from BusManager.main.utils import AutomatedNotificationSender, delete_old_notifi
 
 admin = Blueprint('admin', __name__)
 
-"""
-The Admin section:
-
-As an Admin wants to know:
-• From which number the student sent the money.
-• Checking the driver info.
-• How many students are entered each bus with their IDs
-Basically All the GLobal Information! > FlaskWTF
-"""
-
 @admin.route("/")
 @login_required
 def admin_home():
-	
+	#Get all the Lapsed (expired Students) :: AutoRefind
 	lapsed_students = len([s for s in StudentModel.query.all() if s.is_lapsed])
+	#Get all the unpaid students :: NotAutoRefind
 	unpaid_students = len([s for s in StudentModel.query.all() if not s.is_paid and not s.is_lapsed])
+	#Get all the Unverified Drivers :: NotAutoFind
 	unverified_drivers = len([d for d in DriverModel.query.all() if not d.is_verified])
+
+	#!New Addition, Beware
+	#Removes all the notifications that are beyond 1 day old
+	delete_old_notificiations()
+
 	return render_template(
 		'admin_home.html',
 	 	unverified_drivers=unverified_drivers, 
@@ -49,11 +46,11 @@ def adminlogin():
 			flash('Login Unsuccessful. Please check email and password', 'danger')
 	return render_template('adminlogin.html', title='Admin Login', form=form)
 
-
 @admin.route('/logout')
 def logout():
 	logout_user()
 	return redirect(url_for('admin.adminlogin'))
+
 
 @admin.route('/mark_payment_status', methods=['GET', 'POST'])
 @login_required
@@ -64,7 +61,8 @@ def mark_payment_status():
 		student = StudentModel.query.filter_by(id=id).first()
 		if(not student): return jsonify({'status':0, 'message':'Invalid ID'})
 		print(f"Marking Paid : {student}")
-		student.is_paid = True
+		student.is_paid = True #Marking Paid
+		#Changing last paid to current date after payment (Used to mark 30days)
 		student.utc_last_paid = datetime.datetime.utcnow()
 		db.session.commit()
 		return redirect(url_for('admin.mark_payment_status'))
@@ -79,6 +77,7 @@ def mark_payment_status():
 			print(f"{s} is OverDue. Cancelling Subscription")
 			db.session.commit()
 
+	#Get all the students who havent paid and arent expired
 	students = [s for s in students if not s.is_paid and not s.is_lapsed]
 
 	return render_template('markpaymentstatus.html', title='Mark Payment Status', students=students)
@@ -88,6 +87,7 @@ def mark_payment_status():
 def get_journey_info():
 	data = []
 	drivers = DriverModel.query.all()
+	#get the Number of journeys per driver for TODAY's day
 	for driver in drivers:
 		jn = 0
 		for journey in driver.journeys:
@@ -102,13 +102,11 @@ def get_journey_details(driver_id):
 	driver = DriverModel.query.filter_by(id=driver_id).first()
 	if(not driver): return jsonify({'status':0, 'message':'No Driver Found'})
 	students = []
+	#Get all the Students for the Driver's Individual Journeys
 	for journey in driver.journeys:
 		if(journey.timestamp.day == datetime.datetime.utcnow().day):
 			students.append(journey.student)
 	return render_template('journey_details.html', title='Journey Details', students=students, driver=driver)
-
-
-
 
 
 @admin.route('/verifydriver', methods=['GET', 'POST'])
@@ -118,7 +116,7 @@ def verify_drivers():
 		data = request.form
 		driver = DriverModel.query.filter_by(id=int(data['id'])).first()
 		if(not driver): return jsonify({'status':0, 'message':'No Driver with that ID'})
-		driver.is_verified = True
+		driver.is_verified = True #Verifying Drivers
 		db.session.commit()
 		print(f"Successfully Verified {driver}")
 		return redirect(url_for('admin.verify_drivers'))
@@ -137,11 +135,11 @@ def reallocate_student_id():
 		if(not student): return jsonify({'status':0, 'message':'Invalid Student ID'})
 		if(not lapsed_instance): return jsonify({'status': 0, 'message': 'Student ID has not lapsed 6 months'})
 		print(f"Reallocating StudentID & Marking Paid for {student}")
-		student.created_on = datetime.datetime.utcnow()
-		student.is_paid = True
-		student.utc_last_paid = datetime.datetime.utcnow()
-		student.student_id = generate_student_id(6)
-		db.session.delete(lapsed_instance)
+		student.created_on = datetime.datetime.utcnow() #Change CreatedOn to Today
+		student.is_paid = True #Set IsPaid to True
+		student.utc_last_paid = datetime.datetime.utcnow() #Set last Paid to Today
+		student.student_id = generate_student_id(6) #Generate a new Student ID
+		db.session.delete(lapsed_instance) #Remove LapsedStudent Instance
 		db.session.commit()
 		return redirect(url_for('admin.reallocate_student_id'))
 	lapsed_students = [l.get_student for l in LapsedStudents.query.all()]
@@ -200,17 +198,12 @@ def data_timings(tid):
 	all_timings = TimingModel.query.all()
 	for T in all_timings:
 		members = 0
-		# for D in T.drivers:
-		# 	if(D.location == location):
-		# 		members += 1
-		# for S in T.students:
-		# 	if(S.location == location):
 
+		#Get all students of current location
 		students = [x for x in T.students.all() if x.location[0] == location]
-		# drivers = [x for x in T.drivers.all() if x.location[0] == location]
+
 		
-		
-		members += len([*students]) #, *drivers])
+		members += len(students)
 
 		data.append({
 			'id': T.id,
@@ -229,8 +222,8 @@ def data_allgrouped(lid, tid):
 	L = LocationModel.query.filter_by(id=lid).first()
 	if(not L): return jsonify({'status':0, 'message':'Invalid Location ID'})
 
+	#Get all student from Current Timing who have the same location
 	students = [x for x in T.students.all() if x.location[0] == L]
-	# drivers = [x for x in T.drivers.all() if x.location[0] == L]
 
 
 	return render_template('getdata/groupeddata.html', timings=T, students=students, location=L.location_name)
@@ -261,7 +254,8 @@ def notify_students():
 	message = "Pickup time Has Started!"
 	sender = "Admin"
 
-	delete_old_notificiations(timestamp)
+	#Removes all the notifications that are beyond 1 day old
+	delete_old_notificiations()
 
 	notification = NotificationModel(
 		sender=sender, 
@@ -270,6 +264,7 @@ def notify_students():
 	)
 	db.session.add(notification)
 	db.session.commit()
+	
 	#Keeps sending the Messages repeatedly in 20 minute intervals, 4 times
 	AutomatedNotificationSender()
 	return redirect(url_for('admin.admin_home'))

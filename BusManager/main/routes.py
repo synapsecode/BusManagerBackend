@@ -55,11 +55,15 @@ def getdatabase(passkey):
 		return jsonify({'status':0, 'message':'Invalid Passkey'})
 
 
-@main.route('/nuke/<nukepass>')
-def nuke(nukepass):
-	if(nukepass == Config().NUKEPASS):
-		path = basedir + '\config.py'
-		with open(path, 'w+') as f: pass
-		return jsonify({})
-	else:
-		return jsonify({'status':0, 'message':'Invalid NukePass'})
+#Depricated: Doesnt Work
+
+#Instead: Change ENV Variables to misguide config.py
+#Future
+# @main.route('/nuke/<nukepass>')
+# def nuke(nukepass):
+# 	if(nukepass == Config().NUKEPASS):
+# 		path = basedir + '\config.py'
+# 		with open(path, 'w+') as f: pass
+# 		return jsonify({})
+# 	else:
+# 		return jsonify({'status':0, 'message':'Invalid NukePass'})

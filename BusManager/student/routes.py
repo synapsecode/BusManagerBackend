@@ -1,27 +1,3 @@
-"""
-The student app has these features:
-
-•Accepting agreement.
-•User registration with phone number.
-• collecting user info like the Area name they stay.
-• Monthly subscription through local Payment.
-The local payment works like:
-- send money to phone number.
-- The receiver will get a message saying that he got money from this number 'the sender number'.
-So the student, when he send money we just need to know from which number he has sent the money. no need
-to integrate like Stripe.
-
-
-So while we check if we receive the money or not the student will see a loading page or Please wait message.
-
-After the Admin accepts now the student will be able to see available buses to the Area they have entered
-while they were registering. and we will provide them an ID "The ID is diff from student Id which university 
-gives the student".
-
-
-> Which Phone Did you send Money > Verify
-"""
-
 from flask import Blueprint, jsonify, render_template, request, session
 from BusManager.models import *
 from BusManager import db
@@ -29,15 +5,17 @@ from BusManager.main.utils import generate_session_id, send_otp, send_sms, verif
 import random
 import datetime
 import io
-from BusManager.main.utils import timeago, upload_file_to_cloud
+from BusManager.main.utils import timeago, upload_file_to_cloud, delete_old_notificiations
 
 def generate_student_id(l):
+	#!As per Ismail's request, Changed SID from AlphaNum6 -> Num6
 	# cset = [*[str(i) for i in range(0,10)],*[chr(x) for x in range(65,91)], *[chr(x) for x in range(97,123)]]
 	# sid = ''.join([random.choice(cset) for _ in range(l)])
 	sid = random.randint(100000, 999999)
 	print("Generated SID")
 	student = StudentModel.query.filter_by(student_id=sid).first()
-	while(student):
+	#Prevent SID CLash
+	while(student != None):
 		print("SID Exists Retrying")
 		sid = random.randint(100000, 999999)
 		student = StudentModel.query.filter_by(student_id=sid).first()
@@ -53,6 +31,7 @@ def student_home():
 @student.route("/register", methods=['POST'])
 def register_number():
 	data = request.get_json()
+	#Get Data
 	name = data['name']
 	phone = data['phone_number']
 	location = data['location'].lower()
@@ -164,6 +143,7 @@ def login_student(phone):
 		otp = data['otp']
 		is_correct = verify_otp(phone, otp)
 		if(is_correct):
+			#If OTP is Correct
 			sessionkey = generate_session_id()
 			s = SessionModel.query.filter_by(phone=phone).first()
 			if(s):
@@ -204,24 +184,17 @@ def getbuses(phone_number):
 	return jsonify({'status': 0, 'message': 'Student Does not Exist'})
 
 
-"""
-Status Codes:
-0 -> HardServerError
-1 -> Lapsed
-2 -> NotPaid
-3 -> 30DaysUp
-
-"""
 @student.route('/checkpaymentstatus/<number>')
 def checkpaymentstatus(number):
 	if(not verify_session_key(request, number)): return jsonify({'status':0, 'message':'SessionFault'})
 	student = StudentModel.query.filter_by(phone=number).first()
 	if(not student): return jsonify({'status':0, 'message':'No Student Found with that Phone Number'})
 
-	#Check if 6 months lapsed
+	#Check if 6 months lapsed :: AutoCheck
 	if(student.is_lapsed):
 		return jsonify({'status': 1, 'message':'Account Expired', 'isPaid':False})
 	
+	#Chck if Student Hasnt paid :: No AutoCheck
 	if(not student.is_paid): return jsonify({'status': 3, 'message':'Payment Not Done', 'isPaid':False})
 
 	#Checking if Payment OverDue
@@ -297,7 +270,6 @@ def edit_profile():
 		S.phone = phone
 		db.session.commit()
 		send_otp(phone)
-		#On app, show the Verify OTP Screen and send get request to /verifyphone
 
 	if(timings != []):
 		timings = list(timings)
@@ -370,6 +342,8 @@ def update_profile_image(phone):
 
 @student.route('/getnotifications')
 def getnotifications():
+	#Deletes all the Notifications that are over 1 day
+	delete_old_notificiations()
 	notifs = NotificationModel.query.order_by(NotificationModel.id.desc()).all()
 	return jsonify({
 		'status':'200',

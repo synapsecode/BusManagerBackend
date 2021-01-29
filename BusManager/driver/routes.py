@@ -6,31 +6,15 @@ import random
 import io
 driver = Blueprint('driver', __name__)
 
-"""
-The Driver app works like this:
-
-• Accept the Agreement
-• Collect driver information like buss number
-•Show loading or Please wait message while the admin is verifying.
-• home page with TextField.
-• The driver will enter the Studnet ID and check if the student have paid or not.
-
-If the student have paid the driver can allow the student to enter the bus.
-
-When the driver allows the student, automatically sends the student ID to the Admin.
-The Admin will see each bus how many students are in with their ID
-
-> Student Can Give Rating Too
-"""
 
 @driver.route("/")
 def driver_home():
-	return "BusManager<DRIVER>"
+	return "BusManager<DRIVER> API :: MAIN"
 
 @driver.route("/register", methods=['POST'])
 def driver_register():
 	data = request.get_json()
-	# print(data)
+	# Get Data
 	name = data['name']
 	phone = data['phone_number']
 	bus_number = data['bus_number']
@@ -102,13 +86,13 @@ def verify_driver_otp(phone, otp):
 	if(is_correct):
 		driver = DriverModel.query.filter_by(phone=phone).first()
 		if(not driver): return jsonify({'status':0, 'message':'No Driver with that Phone Number'})
-		driver.phone_verified = True
+		driver.phone_verified = True #Verify Driver
 		db.session.commit()
 		print(f"{driver} -> {driver.phone_verified}")
 		#---------------------------------LOGINREDIRECT----------------------------------------
 		S = SessionModel.query.filter_by(phone=driver.phone).first()
 		if(not S):
-			sessionkey = generate_session_id()
+			sessionkey = generate_session_id() #Generate Session ID
 			S = SessionModel(phone=phone, sessionkey=sessionkey)
 			db.session.add(S)
 			db.session.commit()
@@ -126,6 +110,7 @@ def login_driver(phone):
 		otp = data['otp']
 		is_correct = verify_otp(phone, otp)
 		if(is_correct):
+			#If OTP Verified
 			sessionkey = generate_session_id()
 			s = SessionModel.query.filter_by(phone=phone).first()
 			if(s):
@@ -223,7 +208,7 @@ def edit_profile():
 
 
 	#If such sensitive information changes, Driver must be reverified
-	#REMOVED UNDER SPECIFIC REQUEST BY ISMAIL
+	#!REMOVED UNDER SPECIFIC REQUEST BY ISMAIL
 	# if(phone != driver.phone or data['bus_number'] != driver.bus_number or data['license_number'] != driver.license_number):
 	# 	driver.is_verified = False
 
