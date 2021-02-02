@@ -135,7 +135,7 @@ def otp_generator():
 
 def send_otp(phone):
 	#?Default: Remove this in production
-	if(phone != '+918904995101'): phone = '+918904995101'
+	# if(phone != '+918904995101'): phone = '+918904995101'
 
 	otp = otp_generator()
 	print(f"OTP -> {otp}")
@@ -149,14 +149,14 @@ def send_otp(phone):
 		db.session.add(O)
 	db.session.commit()
 	
-	send_sms(otp, phone) #Send the Message
-	#send_hormuud_sms(otp, phone)
+	# send_sms(otp, phone) #Send the Message
+	send_hormuud_sms(otp, phone)
 	
 
 #?Essentially We use OTP To verify number
 def verify_otp(phone, otp):
 	#Default: Remove this in production
-	if(phone != '+918904995101'): phone = '+918904995101'
+	# if(phone != '+918904995101'): phone = '+918904995101'
 
 	TIMEOUT = 75
 	ct = int(time.time())
