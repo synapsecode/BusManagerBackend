@@ -100,7 +100,11 @@ def send_sms(msg, phone):
 	# print(send_hormuud_sms(msg, phone))
 
 def send_hormuud_sms(msg, phone):
-	cfg = Config
+	cfg = Config()
+	print("\n\n\nHORMUUD USERNAME", Config.HORMUUD_USERAME)
+	print("\n\n\nHORMUUD PASSWORD", Config.HORMUUD_PASSWORD)
+	print("\n\n\nCFG HORMUUD USERNAME", cfg.HORMUUD_USERAME)
+	print("\n\n\nCFG HORMUUD PASSWORD", cfg.HORMUUD_PASSWORD)
 	#---------------Getting Access Tokens---------------------
 	auth_payload = f"grant_type=password&username={cfg.HORMUUD_USERNAME}&password=${cfg.HORMUUD_PASSWORD}"
 	auth_response = requests.request(
