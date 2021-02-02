@@ -234,7 +234,7 @@ def AutomatedNotificationSender():
 			message = "Reminder: Pickup time Has Started!"
 			sender = "AutomatedReminder"
 
-			delete_old_notificiations(timestamp)
+			delete_old_notificiations()
 
 			notification = NotificationModel(
 				sender=sender, 
