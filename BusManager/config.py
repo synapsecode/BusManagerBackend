@@ -15,7 +15,8 @@ class Config:
 
 	#Somalian SMS Provider
 	HORMUUD_USERAME = "rafiiqts"
-	HORMUUD_PASSWORD = "LC01nKQT+woYp92W4A/B1Jty7tsejRma"
+	# HORMUUD_PASSWORD = "LC01nKQT+woYp92W4A/B1Jty7tsejRma"
+	HORMUUD_PASSWORD = "Universitybus@01"
 
 	#Ismail's Cloudinary Data
 	CLOUDINARY_CONFIG = {
