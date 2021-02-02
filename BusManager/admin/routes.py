@@ -276,7 +276,8 @@ def notify_students():
 def add_data():
 	locations = LocationModel.query.all()
 	universities = UniversityModel.query.all()
-	return render_template('add_data.html', title='Add Data', locations=locations, universities=universities)
+	admin = AdminUser.query.all()[0]
+	return render_template('add_data.html', title='Add Data', locations=locations, universities=universities, admin=admin)
 
 
 @admin.route('/add_data_actions/<action>/<id>', methods=['GET', 'POST'])
@@ -291,6 +292,13 @@ def add_data_actions(action, id):
 		if(action == 'UNIADD'):
 			uni = UniversityModel(name=data['uni_name'].lower(), address=data['uni_addr'].lower())
 			db.session.add(uni)
+			db.session.commit()
+		if(action == 'TEXTADD'):
+			admin = AdminUser.query.all()[0]
+			pending_text = data['pending_text']
+			expired_text = data['expired_text']
+			admin.pendingtext = pending_text
+			admin.expiredtext = expired_text
 			db.session.commit()
 		return redirect(url_for('admin.add_data'))
 

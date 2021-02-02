@@ -13,6 +13,8 @@ class AdminUser(db.Model, UserMixin):
 	id = db.Column(db.Integer, primary_key=True)
 	username = db.Column(db.String)
 	password = db.Column(db.String)
+	pendingtext = db.Column(db.String)
+	expiredtext = db.Column(db.String)
 
 	def __repr__(self):
 		return f"AdminUser({self.username})"
