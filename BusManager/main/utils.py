@@ -100,13 +100,14 @@ def send_sms(msg, phone):
 	# print(send_hormuud_sms(msg, phone))
 
 def send_hormuud_sms(msg, phone):
-	# cfg = Config()
-	# print("\n\n\nHORMUUD USERNAME", Config.HORMUUD_USERAME)
-	# print("\n\n\nHORMUUD PASSWORD", Config.HORMUUD_PASSWORD)
-	# print("\n\n\nCFG HORMUUD USERNAME", cfg.HORMUUD_USERAME)
-	# print("\n\n\nCFG HORMUUD PASSWORD", cfg.HORMUUD_PASSWORD)
-	#---------------Getting Access Tokens---------------------
-	auth_payload = f"grant_type=password&username={Config.HORMUUD_USERAME}&password=${Config.HORMUUD_PASSWORD}"
+	uname = Config.HORMUUD_USERAME
+	pwd = Config.HORMUUD_PASSWORD
+	auth_payload = {
+		'grant_type': 'password',
+		'password': pwd,
+		'username':uname
+	}
+	# print(auth_payload)
 	auth_response = requests.request(
 		'POST',
 		'https://smsapi.hormuud.com/token',
@@ -114,11 +115,10 @@ def send_hormuud_sms(msg, phone):
 		headers = {'content-type': "application/x-www-form-urlencoded"},
 	)
 	auth_response = json.loads(auth_response.text)
-	print("Recieved AUTHRES:", auth_response)
 	access_token = auth_response['access_token']
+	# print("ACCESSTOKEN", access_token)
 
 	#---------------Send SMS----------------------
-
 	sms_payload = {
 		"senderid":"BusManagerService",
 		"mobile": phone,
@@ -131,7 +131,7 @@ def send_hormuud_sms(msg, phone):
 		headers={'Content-Type':'application/json', 'Authorization': 'Bearer ' + access_token},
 	)
 	sms_response = json.loads(sms_response.text)
-	return sms_response
+	print("SMS_STATUS", sms_response.get('Data').get('Description'))
 
 def otp_generator():
 	import random
