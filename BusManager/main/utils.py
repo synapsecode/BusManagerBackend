@@ -13,10 +13,17 @@ from BusManager import create_app, db
 import datetime
 import requests
 import json
+import datetime
 
 from apscheduler.schedulers.background import BackgroundScheduler
 sched = BackgroundScheduler()
 sched.start()
+
+def printlog(message, **kwargs):
+	timestamp = datetime.datetime.utcnow().strftime('[(%d/%m/%Y) :: GMT %H:%M:%S] =>')
+	print(timestamp, msg)
+	if(len(kwargs) > 0): print("^^^^ EXTRA DETAILS:", kwargs)
+
 # from BusManager.admin.routes import delete_old_notificiations
 
 #For Authentication Purposes, After login, the user recieves back a session key.
@@ -27,7 +34,7 @@ def verify_session_key(request, phone):
 		skey = request.headers['Session-Key']
 		sk = SessionModel.query.filter_by(phone=phone).first()
 		if(not sk):
-			print("NoSession")
+			printlog(f"NoSession := {phone}")
 			return False
 		if(skey == sk.sessionkey): return True
 	return False
@@ -56,48 +63,23 @@ def upload_file_to_cloud(filebytes, filetype=None):
 			objectURI = uploaded_object['secure_url']
 
 		end = time.time()
-		print(f"TOOK {int(end-start)} seconds to finish")
+		printlog(f"Image Took {int(end-start)} seconds to upload")
 		return({
 			"STATUS": "OK",
 			"URI": str(objectURI),
 		})
 	except Exception as e:
-		print("EERRRRRRR", e)
+		printlog("Image Upload Fatal Exception", e)
 		return({
 			"STATUS": "ERR",
 			"ERRCODE": str(e)
 		})
-
-# def send_nexmo_sms(msg, phone):
-# 	import nexmo
-# 	client = nexmo.Client(key='92efcb6b', secret='cQ1aHUFDjTbz1kzE')
-# 	client.send_message({
-# 		'from': 'BusManager',
-# 		'to': phone,
-# 		'text': msg,
-# 	})
 
 
 def generate_session_id():
 	cset = [*[str(i) for i in range(0,10)],*[chr(x) for x in range(65,91)], *[chr(x) for x in range(97,123)]]
 	session_id = ''.join([random.choice(cset) for _ in range(16)])
 	return session_id
-
-otpstorage = {}
-
-def send_twilio_sms(msg, phone):
-	cfg = Config()
-	from twilio.rest import Client
-	import os
-	account_sid = cfg.TWILIO_ACCOUNT_SID
-	auth_token = cfg.TWILIO_AUTH_TOKEN	
-	client = Client(account_sid, auth_token)
-	message = client.messages.create(body=msg, from_='+12056352635', to=phone)
-	return message.sid
-
-def send_sms(msg, phone):
-	print(send_twilio_sms(msg, phone))
-	# print(send_hormuud_sms(msg, phone))
 
 def send_hormuud_sms(msg, phone):
 	uname = Config.HORMUUD_USERAME
@@ -107,7 +89,6 @@ def send_hormuud_sms(msg, phone):
 		'password': pwd,
 		'username':uname
 	}
-	# print(auth_payload)
 	auth_response = requests.request(
 		'POST',
 		'https://smsapi.hormuud.com/token',
@@ -116,7 +97,6 @@ def send_hormuud_sms(msg, phone):
 	)
 	auth_response = json.loads(auth_response.text)
 	access_token = auth_response['access_token']
-	# print("ACCESSTOKEN", access_token)
 
 	#---------------Send SMS----------------------
 	sms_payload = {
@@ -131,7 +111,7 @@ def send_hormuud_sms(msg, phone):
 		headers={'Content-Type':'application/json', 'Authorization': 'Bearer ' + access_token},
 	)
 	sms_response = json.loads(sms_response.text)
-	print("SMS_STATUS", sms_response.get('Data').get('Description'))
+	printlog("SMS_STATUS", sms_response.get('Data').get('Description'))
 
 def otp_generator():
 	import random
@@ -142,7 +122,7 @@ def send_otp(phone):
 	# if(phone != '+918904995101'): phone = '+918904995101'
 
 	otp = otp_generator()
-	print(f"OTP -> {otp}")
+	printlog(f"OTP :: {phone} -> {otp}")
 	T = int(time.time())
 	O = OTPModel.query.filter_by(phone=phone).first()
 	if(O):
@@ -167,10 +147,10 @@ def verify_otp(phone, otp):
 	O = OTPModel.query.filter_by(phone=phone).first()
 	if(not O): return False
 	timedelta = ct - O.timestamp
-	print(f"SessionOTPRequest: ({phone} -> {O.otp} === {otp}) : {timedelta}s ")
+	printlog(f"SessionOTPRequest: ({phone} -> {O.otp} === {otp}) : {timedelta}s ")
 	ret = False
 	if(timedelta >= TIMEOUT):
-		print("OTPSessionTimedOut")
+		printlog("===== OTPSessionTimedOut =====")
 	if(int(otp) == O.otp):
 		ret = True
 	db.session.delete(O)
@@ -217,7 +197,7 @@ def AutomatedNotificationSender():
 	def kill():
 		sched.remove_job('autonotif')
 		notif_count = 0 #Reset
-		print("Done Sending Automated Notifications")
+		printlog("Done Sending Automated Notifications")
 
 	def work():
 		global notif_count
@@ -243,7 +223,7 @@ def AutomatedNotificationSender():
 			)
 			db.session.add(notification)
 			db.session.commit()
-		print("Created Notification", notif_count)
+		printlog("Admin Created Notification", notif_count)
 		
 
 	#Prevent Multiple Calls
@@ -253,5 +233,5 @@ def AutomatedNotificationSender():
 			sched.add_job(work, 'interval', seconds=INTERVAL, id='autonotif')
 			return 200
 		else:
-			print("Automated Batch Already Running")
+			printlog("Automated Notification Batch Already Running")
 			return 42

@@ -6,7 +6,7 @@ from BusManager import bcrypt, db
 import datetime
 from BusManager.student.routes import generate_student_id
 import time
-from BusManager.main.utils import AutomatedNotificationSender, delete_old_notificiations
+from BusManager.main.utils import AutomatedNotificationSender, delete_old_notificiations, printlog
 
 admin = Blueprint('admin', __name__)
 
@@ -60,7 +60,7 @@ def mark_payment_status():
 		id =int(data['id'])
 		student = StudentModel.query.filter_by(id=id).first()
 		if(not student): return jsonify({'status':0, 'message':'Invalid ID'})
-		print(f"Marking Paid : {student}")
+		printlog(f"Marking Paid : {student}")
 		student.is_paid = True #Marking Paid
 		#Changing last paid to current date after payment (Used to mark 30days)
 		student.utc_last_paid = datetime.datetime.utcnow()
@@ -74,7 +74,7 @@ def mark_payment_status():
 	for s in students:
 		if(s.utc_last_paid and (datetime.datetime.utcnow() - s.utc_last_paid).days > 30):
 			s.is_paid = False
-			print(f"{s} is OverDue. Cancelling Subscription")
+			printlog(f"{s} is OverDue. Cancelling Subscription")
 			db.session.commit()
 
 	#Get all the students who havent paid and arent expired
@@ -118,7 +118,7 @@ def verify_drivers():
 		if(not driver): return jsonify({'status':0, 'message':'No Driver with that ID'})
 		driver.is_verified = True #Verifying Drivers
 		db.session.commit()
-		print(f"Successfully Verified {driver}")
+		printlog(f"Successfully Verified {driver}")
 		return redirect(url_for('admin.verify_drivers'))
 	drivers = [d for d in DriverModel.query.all() if not d.is_verified]
 	return render_template('verify_drivers.html', title='Verify Driver', drivers=drivers)
@@ -134,7 +134,7 @@ def reallocate_student_id():
 		lapsed_instance = LapsedStudents.query.filter_by(sid=id).first()
 		if(not student): return jsonify({'status':0, 'message':'Invalid Student ID'})
 		if(not lapsed_instance): return jsonify({'status': 0, 'message': 'Student ID has not lapsed 6 months'})
-		print(f"Reallocating StudentID & Marking Paid for {student}")
+		printlog(f"Reallocating StudentID & Marking Paid for {student}")
 		student.created_on = datetime.datetime.utcnow() #Change CreatedOn to Today
 		student.is_paid = True #Set IsPaid to True
 		student.utc_last_paid = datetime.datetime.utcnow() #Set last Paid to Today
@@ -153,7 +153,7 @@ def delete_drivers():
 		id = int(data['id'])
 		driver = DriverModel.query.filter_by(id=id).first()
 		if(not driver): return jsonify({'status':0, 'message':'Invalid ID'})
-		print(f"Deleteing {driver}")
+		printlog(f"Deleteing {driver}")
 		db.session.delete(driver)
 		db.session.commit()
 		return redirect(url_for('admin.delete_drivers'))
@@ -168,7 +168,7 @@ def delete_students():
 		id = int(data['id'])
 		student = StudentModel.query.filter_by(id=id).first()
 		if(not student): return jsonify({'status':0, 'message':'Invalid ID'})
-		print(f"Deleteing {student}")
+		printlog(f"Deleteing {student}")
 		db.session.delete(student)
 		db.session.commit()
 		return redirect(url_for('admin.delete_students'))

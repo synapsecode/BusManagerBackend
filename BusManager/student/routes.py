@@ -12,11 +12,11 @@ def generate_student_id(l):
 	# cset = [*[str(i) for i in range(0,10)],*[chr(x) for x in range(65,91)], *[chr(x) for x in range(97,123)]]
 	# sid = ''.join([random.choice(cset) for _ in range(l)])
 	sid = random.randint(100000, 999999)
-	print("Generated SID")
+	printlog("Generated SID")
 	student = StudentModel.query.filter_by(student_id=sid).first()
 	#Prevent SID CLash
 	while(student != None):
-		print("SID Exists Retrying")
+		printlog("SID Exists Retrying")
 		sid = random.randint(100000, 999999)
 		student = StudentModel.query.filter_by(student_id=sid).first()
 	return sid
@@ -39,6 +39,10 @@ def register_number():
 	uni_addr = data['university_address']
 	home_addr = data['home_address']
 
+	std = StudentModel.query.filter_by(phone=phone).first()
+	if(std):
+		return jsonify({'status':0, 'message':'Phone Number has already been used'})
+
 	#Create location if doesnt exist
 	loc = LocationModel.query.filter_by(location_name=location).first()
 	if(loc == None):
@@ -54,7 +58,7 @@ def register_number():
 		db.session.commit()
 
 	sid = generate_student_id(6)
-	print("New Generated SID:", sid)
+	printlog(f"New Generated SID: {sid}")
 
 	student = StudentModel(
 		name=name,
@@ -104,7 +108,8 @@ def getstudent(phone):
 	if(not verify_session_key(request, phone)): return jsonify({'status':0, 'message':'SessionFault'})
 	student = StudentModel.query.filter_by(phone=phone).first()
 	if(not student): return jsonify({'status':0, 'message':'No Student With that Phone Number'})
-	print(student.get_json_representation())
+	# print(student.get_json_representation())
+	printlog(f"Got JSON Representation :: {student}")
 	return jsonify({
 		'status':200,
 		'message':'OK',
@@ -113,6 +118,7 @@ def getstudent(phone):
 
 @student.route("/resend_otp/<phone>")
 def resend_otp(phone):
+	printlog(f"Resending OTP to {phone}")
 	send_otp(phone)
 	return jsonify({'status':200, 'message':'OK'})
 
@@ -176,6 +182,11 @@ def getbuses(phone_number):
 	if(student):
 		s_loc = student.location[0]
 		available_drivers = s_loc.drivers.all()
+
+		#!Change Made Upon Ismail's Request
+		#!Unverified Drivers aren't shown
+		available_drivers = [d for d in available_drivers if d.is_verified]
+
 		return jsonify({
 				'status': 200,
 				'message':'OK',
@@ -224,7 +235,6 @@ def edit_profile():
 	dob = data.get('dob') or student.get_json_representation()['dob']
 
 	is_fulltime = data.get('isFullTime')
-	print(is_fulltime)
 
 	semester = data.get('semester') or student.semester
 
@@ -289,7 +299,6 @@ def edit_profile():
 
 	#Updating Date of Birth
 	if(dob != student.get_json_representation()['dob']):
-		# print(dob.split('/'))
 		student.dob = datetime.datetime(
 			day=int(dob.split('/')[0]), 
 			month=int(dob.split('/')[1]), 

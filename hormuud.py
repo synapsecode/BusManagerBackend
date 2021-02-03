@@ -9,7 +9,6 @@ def send_hormuud_sms(msg, phone):
 		'password': pwd,
 		'username':uname
 	}
-	# print(auth_payload)
 	auth_response = requests.request(
 		'POST',
 		'https://smsapi.hormuud.com/token',
@@ -18,7 +17,6 @@ def send_hormuud_sms(msg, phone):
 	)
 	auth_response = json.loads(auth_response.text)
 	access_token = auth_response['access_token']
-	# print("ACCESSTOKEN", access_token)
 	#---------------Send SMS----------------------
 
 	sms_payload = {

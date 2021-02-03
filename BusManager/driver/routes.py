@@ -4,6 +4,7 @@ from BusManager import db
 from BusManager.main.utils import generate_session_id, send_otp, upload_file_to_cloud, verify_otp, verify_session_key
 import random
 import io
+from BusManager.main.utils import printlog
 driver = Blueprint('driver', __name__)
 
 
@@ -88,7 +89,7 @@ def verify_driver_otp(phone, otp):
 		if(not driver): return jsonify({'status':0, 'message':'No Driver with that Phone Number'})
 		driver.phone_verified = True #Verify Driver
 		db.session.commit()
-		print(f"{driver} -> {driver.phone_verified}")
+		printlog(f"{driver} -> {driver.phone_verified}")
 		#---------------------------------LOGINREDIRECT----------------------------------------
 		S = SessionModel.query.filter_by(phone=driver.phone).first()
 		if(not S):
@@ -143,25 +144,25 @@ def allow_student():
 	student = StudentModel.query.filter_by(student_id=sid).first()
 	driver = DriverModel.query.filter_by(license_number=license_number).first()
 	if(not verify_session_key(request, driver.phone)):
-		print("session fault")
+		printlog("session fault")
 		return jsonify({'status':0, 'message':'SessionFault'})
 	if(not driver):
-		print("LicenseFault")
+		printlog("LicenseFault")
 		return jsonify({'status':0, 'message':'Invalid License Number'})
 	if(not student):
-		print("Student IDFault")
+		printlog("Student IDFault")
 		return jsonify({'status':0, 'message':'Invalid Student Phone Number'})
 	if(not student.is_paid):
-		print("Student Not Paid")
+		printlog("Student Not Paid")
 		return jsonify({'status':0, 'message':'Student Has not Paid'})
-	# print(f"DriverLocation: {driver.location}    ---->   StudentLocation: {student.location}")
+	# printlog(f"DriverLocation: {driver.location}    ---->   StudentLocation: {student.location}")
 	if(not student.location == driver.location):
-		print("Locations dont match")
+		printlog("Locations dont match")
 		return jsonify({'status':0, 'message': 'Locations do not match'})
 	journey = JourneyModel(driver=driver, student=student)
 	db.session.add(journey)
 	db.session.commit()
-	print("Allowed")
+	printlog("Allowed")
 	return jsonify({'status':200, 'message':'OK'})
 
 @driver.route("/add_rating", methods=['POST'])
@@ -224,7 +225,7 @@ def edit_profile():
 
 	if(timings and timings != []):
 		timings = list(timings)
-		print("Recievedtimings", timings)
+		# printlog("Recievedtimings", timings)
 		#Remove All Driver's Timings
 		driver.timings = []
 		db.session.commit()
@@ -239,7 +240,7 @@ def edit_profile():
 				db.session.commit()
 			TimingsList.append(T)
 
-		print("New Timings", TimingsList)
+		# printlog("New Timings", TimingsList)
 		#Add Timings to Driver
 		[T.drivers.append(driver) for T in TimingsList]
 		db.session.commit()
@@ -259,7 +260,6 @@ def update_profile_image(phone):
 	driver = DriverModel.query.filter_by(phone=phone).first()
 	if(not driver): return jsonify({'status':0, 'message':'No Driver with that Phone Number'})
 	pictureData = request.files['picture']
-	# print(f"Recieved -> {pictureData}")
 	pBytes = io.BytesIO(pictureData.read())
 	uploaded_img = upload_file_to_cloud(pBytes)
 	if(uploaded_img['STATUS'] == 'OK'):
