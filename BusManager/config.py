@@ -6,7 +6,7 @@ class Config:
 	#Change db.sqlite to env variable to enable as killswitch
 	SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'db.sqlite')  #Database path
 	SQLALCHEMY_TRACK_MODIFICATIONS = False
-	PRODUCTION_MODE = False #This states whether the app runs in DEBUG MODE or not
+	PRODUCTION_MODE = True #This states whether the app runs in DEBUG MODE or not
 	PORT_NUMBER = 5000 #Change to Env Variable to enable kill
 	HOST='localhost' #Change to env to enable kill
 	
