@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, render_template, request, session
 from BusManager.models import *
 from BusManager import db
-from BusManager.main.utils import generate_session_id, send_otp, send_sms, verify_otp, verify_session_key
+from BusManager.main.utils import generate_session_id, send_otp, verify_otp, verify_session_key
 import random
 import datetime
 import io

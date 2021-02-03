@@ -133,7 +133,6 @@ def send_otp(phone):
 		db.session.add(O)
 	db.session.commit()
 	
-	# send_sms(otp, phone) #Send the Message
 	send_hormuud_sms(otp, phone)
 	
 
