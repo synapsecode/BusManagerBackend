@@ -5,7 +5,7 @@ from BusManager.main.utils import generate_session_id, send_otp, verify_otp, ver
 import random
 import datetime
 import io
-from BusManager.main.utils import timeago, upload_file_to_cloud, delete_old_notificiations
+from BusManager.main.utils import timeago, upload_file_to_cloud, delete_old_notificiations, printlog
 
 def generate_student_id(l):
 	#!As per Ismail's request, Changed SID from AlphaNum6 -> Num6

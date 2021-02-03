@@ -111,7 +111,7 @@ def send_hormuud_sms(msg, phone):
 		headers={'Content-Type':'application/json', 'Authorization': 'Bearer ' + access_token},
 	)
 	sms_response = json.loads(sms_response.text)
-	printlog("SMS_STATUS", sms_response.get('Data').get('Description'))
+	printlog(f"SMS_STATUS -> {sms_response.get('Data').get('Description')}")
 
 def otp_generator():
 	import random

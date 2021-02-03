@@ -162,7 +162,7 @@ def allow_student():
 	journey = JourneyModel(driver=driver, student=student)
 	db.session.add(journey)
 	db.session.commit()
-	printlog("Allowed")
+	printlog(f"{driver} Allowed {student}")
 	return jsonify({'status':200, 'message':'OK'})
 
 @driver.route("/add_rating", methods=['POST'])
