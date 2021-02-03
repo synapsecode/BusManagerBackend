@@ -21,7 +21,7 @@ sched.start()
 
 def printlog(message, **kwargs):
 	timestamp = datetime.datetime.utcnow().strftime('[(%d/%m/%Y) :: GMT %H:%M:%S] =>')
-	print(timestamp, msg)
+	print(timestamp, message)
 	if(len(kwargs) > 0): print("^^^^ EXTRA DETAILS:", kwargs)
 
 # from BusManager.admin.routes import delete_old_notificiations
