@@ -191,16 +191,16 @@ def AutomatedNotificationSender():
 	ac = create_app().app_context()
 	INTERVAL = 1200 #20 Minutes
 	LIMIT = 3 #Runs 4 Times
-	global notif_count
 	
 	def kill():
 		sched.remove_job('autonotif')
+		global notif_count
 		notif_count = 0 #Reset
 		printlog("Done Sending Automated Notifications")
 
 	def work():
 		global notif_count
-		if(notif_count > LIMIT):
+		if(notif_count == LIMIT):
 			kill()
 			return
 		else: notif_count += 1
@@ -222,15 +222,23 @@ def AutomatedNotificationSender():
 			)
 			db.session.add(notification)
 			db.session.commit()
-		printlog("Admin Created Notification", notif_count)
+		printlog(f"Admin Created Notification :: {notif_count}")
 		
 
 	#Prevent Multiple Calls
-	with ac:
-		if(len(sched.get_jobs()) == 0):
-			notif_count = 0
-			sched.add_job(work, 'interval', seconds=INTERVAL, id='autonotif')
-			return 200
-		else:
-			printlog("Automated Notification Batch Already Running")
-			return 42
+	global notif_count
+	if(notif_count == 0):
+		printlog('Initiating Send Notification')
+		sched.add_job(work, 'interval', seconds=INTERVAL, id='autonotif')
+		return 200
+	else:
+		printlog("Automated Notification Batch Already Running")
+		return 42
+	# with ac:
+	# 	if(notif_count == 0):
+	# 		notif_count = 0
+	# 		sched.add_job(work, 'interval', seconds=INTERVAL, id='autonotif')
+	# 		return 200
+	# 	else:
+	# 		printlog("Automated Notification Batch Already Running")
+	# 		return 42
