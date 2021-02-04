@@ -3,6 +3,7 @@ from BusManager.models import AdminUser, LocationModel, SessionModel, University
 from flask_login import login_required
 from BusManager.config import basedir
 from BusManager.config import Config
+from BusManager import db
 main = Blueprint('main', __name__)
 
 
@@ -64,6 +65,24 @@ def get_text():
 		'pendingtext': admin.pendingtext,
 		'expiredtext': admin.expiredtext
 	})
+
+#Clear the Database
+@main.route('/cleardatabase/<passkey>')
+def cleardatabase(passkey):
+	if(passkey == Config().DBDOWNLOADPASS):
+		db.drop_all()
+		db.create_all()
+		admin = AdminUser()
+		admin.username = 'admin'
+		#Admin PasswordHash
+		admin.password = '$2b$12$gGsTgbXFPx.lvfDgMwzFb.1gOd.OFWvSwm6iGiW8f0bRvYLh1btEG'
+		admin.pendingtext = 'Payment Pending. Please Wait'
+		admin.expiredtext = 'Account Expired. Pay 25$ and inform admin'
+		db.session.add(admin)
+		db.session.commit()
+		return "Database Cleared!"
+	else:
+		return "INCORRECT PASSKEY"
 
 #Depricated: Doesnt Work
 
